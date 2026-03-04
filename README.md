@@ -20,6 +20,7 @@ A comprehensive sentiment analysis pipeline using **real Amazon product reviews*
 - **Rigorous Evaluation**: Train/test split, accuracy, precision, recall, F1, confusion matrices
 - **Opinion Mining**: Aspect extraction, sentiment drivers, category analysis
 - **Interactive Dashboard**: Streamlit app with filters, visualizations, model comparison
+- **REST API**: FastAPI endpoints for real-time sentiment predictions
 
 ## Dataset
 
@@ -63,6 +64,11 @@ nlp-sentiment-analysis/
 │   ├── model_evaluator.py     # Model comparison and metrics
 │   ├── opinion_miner.py       # Aspect extraction, driver analysis
 │   └── visualizer.py          # Charts and visualizations
+├── api/
+│   ├── main.py                # FastAPI application
+│   ├── schemas.py             # Pydantic request/response models
+│   └── predictor.py           # Model prediction service
+├── tests/                     # Unit and API tests
 ├── data/                      # Generated data files (gitignored)
 ├── models/                    # Saved ML models (gitignored)
 ├── outputs/                   # Visualization outputs (gitignored)
@@ -113,6 +119,63 @@ python -m streamlit run app.py
 ```
 
 Open http://localhost:8501 in your browser.
+
+### 6. Run the REST API
+
+```bash
+uvicorn api.main:app --reload --port 8000
+```
+
+Open http://localhost:8000/docs for interactive API documentation.
+
+## REST API
+
+The project includes a FastAPI-based REST API for sentiment predictions.
+
+### Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/` | API info and health check |
+| GET | `/health` | Health status |
+| GET | `/models` | List available models |
+| POST | `/predict` | Predict sentiment for single text |
+| POST | `/predict/batch` | Predict sentiment for multiple texts |
+
+### Single Prediction
+
+```bash
+curl -X POST "http://localhost:8000/predict" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "This product is amazing!", "model": "logistic_regression"}'
+```
+
+Response:
+
+```json
+{
+  "text": "This product is amazing!",
+  "model": "logistic_regression",
+  "sentiment": "positive",
+  "confidence": 0.92,
+  "scores": {"positive": 0.92, "negative": 0.08}
+}
+```
+
+### Batch Prediction
+
+```bash
+curl -X POST "http://localhost:8000/predict/batch" \
+  -H "Content-Type: application/json" \
+  -d '{"texts": ["Great product!", "Awful quality"], "model": "vader"}'
+```
+
+### Available Models
+
+- `vader` - Rule-based (VADER)
+- `textblob` - Rule-based (TextBlob)
+- `logistic_regression` - ML model (default)
+- `naive_bayes` - ML model
 
 ## Pipeline Options
 
@@ -172,6 +235,7 @@ python main.py --sample-size 5000
 - **NLTK** - VADER sentiment, tokenization
 - **TextBlob** - Pattern-based sentiment
 - **HuggingFace Datasets** - Data loading
+- **FastAPI** - REST API
 - **Streamlit** - Interactive dashboard
 - **Plotly/Matplotlib** - Visualizations
 - **pandas/numpy** - Data processing
