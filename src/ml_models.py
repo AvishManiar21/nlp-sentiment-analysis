@@ -353,11 +353,18 @@ def get_feature_importance(pipeline, top_n=20):
                 "feature": feature_names,
                 "importance": np.abs(coefficients),
             }).sort_values("importance", ascending=False).head(top_n)
+        elif coefficients.shape[0] == 1:
+            importance_df = pd.DataFrame({
+                "feature": feature_names,
+                "importance": np.abs(coefficients[0]),
+            }).sort_values("importance", ascending=False).head(top_n)
         else:
             importance_dfs = {}
-            classes = classifier.classes_ if hasattr(classifier, "classes_") else range(coefficients.shape[0])
+            n_rows = coefficients.shape[0]
+            classes = classifier.classes_ if hasattr(classifier, "classes_") else range(n_rows)
             
-            for i, cls in enumerate(classes):
+            for i in range(n_rows):
+                cls = classes[i] if i < len(classes) else i
                 top_pos = pd.DataFrame({
                     "feature": feature_names,
                     "importance": coefficients[i],

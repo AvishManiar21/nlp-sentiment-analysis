@@ -1,5 +1,7 @@
 # NLP Sentiment Analysis & Opinion Mining
 
+[![CI](https://github.com/AvishManiar21/nlp-sentiment-analysis/actions/workflows/ci.yml/badge.svg)](https://github.com/AvishManiar21/nlp-sentiment-analysis/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/AvishManiar21/nlp-sentiment-analysis/branch/master/graph/badge.svg)](https://codecov.io/gh/AvishManiar21/nlp-sentiment-analysis)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![HuggingFace Dataset](https://img.shields.io/badge/HuggingFace-Dataset-orange)](https://huggingface.co/datasets/fancyzhx/amazon_polarity)
