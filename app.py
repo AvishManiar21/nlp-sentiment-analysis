@@ -94,13 +94,14 @@ def generate_data_for_cloud(sample_size=CLOUD_SAMPLE_SIZE):
     
     pipeline = train_model(X_train, y_train, "logistic_regression", verbose=False)
     results = evaluate_model(pipeline, X_test, y_test, "Logistic Regression")
+    results["pipeline"] = pipeline
     save_model(pipeline, "logistic_regression", MODELS_DIR)
     
     st.info("Generating evaluation results...")
     
-    from src.model_evaluator import compare_models, save_comparison_results
-    comparison = compare_models(df, ml_results={"logistic_regression": results}, verbose=False)
-    save_comparison_results(comparison, RESULTS_DIR)
+    from src.model_evaluator import compare_all_models, save_evaluation_results
+    comparison = compare_all_models(df, ml_results={"logistic_regression": results}, verbose=False)
+    save_evaluation_results(comparison, RESULTS_DIR)
     
     st.success(f"Data generation complete! Processed {len(df):,} reviews.")
     
