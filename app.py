@@ -96,11 +96,14 @@ def render_sidebar(df):
     categories = ["All"] + sorted(df["category"].dropna().unique().tolist())
     selected_category = st.sidebar.selectbox("Category", categories)
     
-    if selected_category != "All":
-        brands = ["All"] + sorted(df[df["category"] == selected_category]["brand"].dropna().unique().tolist())
+    if "brand" in df.columns:
+        if selected_category != "All":
+            brands = ["All"] + sorted(df[df["category"] == selected_category]["brand"].dropna().unique().tolist())
+        else:
+            brands = ["All"] + sorted(df["brand"].dropna().unique().tolist())
+        selected_brand = st.sidebar.selectbox("Brand", brands)
     else:
-        brands = ["All"] + sorted(df["brand"].dropna().unique().tolist())
-    selected_brand = st.sidebar.selectbox("Brand", brands)
+        selected_brand = "All"
     
     sentiments = ["All", "positive", "neutral", "negative"]
     selected_sentiment = st.sidebar.selectbox("Sentiment", sentiments)
@@ -128,7 +131,7 @@ def render_sidebar(df):
     filtered = df.copy()
     if selected_category != "All":
         filtered = filtered[filtered["category"] == selected_category]
-    if selected_brand != "All":
+    if selected_brand != "All" and "brand" in filtered.columns:
         filtered = filtered[filtered["brand"] == selected_brand]
     if selected_sentiment != "All":
         filtered = filtered[filtered["sentiment_label"] == selected_sentiment]

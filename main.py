@@ -82,7 +82,8 @@ def step_load_data(args, data_dir):
     stats = get_dataset_stats(df)
     print(f"  Loaded {stats['total_reviews']:,} reviews")
     print(f"  Categories: {stats['categories']}")
-    print(f"  Brands: {stats['brands']}")
+    if "brands" in stats:
+        print(f"  Brands: {stats['brands']}")
     print(f"  Avg review length: {stats['avg_review_length']:.0f} chars")
     
     return df

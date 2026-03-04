@@ -1,35 +1,48 @@
 # NLP Sentiment Analysis & Opinion Mining
 
-A comprehensive sentiment analysis pipeline using **real Amazon product reviews** with multiple ML models, evaluation metrics, and interactive visualizations.
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![HuggingFace Dataset](https://img.shields.io/badge/HuggingFace-Dataset-orange)](https://huggingface.co/datasets/fancyzhx/amazon_polarity)
+
+A comprehensive sentiment analysis pipeline using **real Amazon product reviews** with multiple ML models, rigorous evaluation metrics, and interactive visualizations.
 
 ## Features
 
-- **Real-World Data**: Fetches ~50K product reviews from Amazon Reviews 2023 dataset via HuggingFace
+- **Real-World Data**: 50,000 genuine Amazon product reviews from HuggingFace
 - **Multiple Sentiment Models**:
   - VADER (rule-based, optimized for social media)
   - TextBlob (pattern-based polarity analysis)
-  - Logistic Regression (TF-IDF features)
-  - Multinomial Naive Bayes (TF-IDF features)
+  - Logistic Regression (TF-IDF features) - **89.6% accuracy**
+  - Multinomial Naive Bayes (TF-IDF features) - **87.1% accuracy**
   - DistilBERT fine-tuning (optional, requires GPU)
 - **Rigorous Evaluation**: Train/test split, accuracy, precision, recall, F1, confusion matrices
-- **Opinion Mining**: Aspect extraction, sentiment drivers (TF-IDF), category/brand analysis
+- **Opinion Mining**: Aspect extraction, sentiment drivers, category analysis
 - **Interactive Dashboard**: Streamlit app with filters, visualizations, model comparison
 
 ## Dataset
 
-**McAuley-Lab/Amazon-Reviews-2023** - A large-scale dataset containing 571M+ reviews across 33 product categories.
+**Amazon Polarity Dataset** (`fancyzhx/amazon_polarity`) - 3.6M real Amazon product reviews.
 
-We sample reviews from:
-- Cell Phones & Accessories (Smartphones)
-- Electronics
-- Appliances
-- Office Products
-- Home & Kitchen
+- **Source**: HuggingFace Datasets
+- **Size**: 3,600,000 reviews (we sample 50,000 for efficient training)
+- **Labels**: Binary sentiment derived from star ratings
+  - **Negative**: 1-2 star reviews
+  - **Positive**: 4-5 star reviews
+- **Content**: Real review text written by Amazon customers
 
-Ground truth sentiment labels are derived from star ratings:
-- **Negative**: 1-2 stars
-- **Neutral**: 3 stars
-- **Positive**: 4-5 stars
+## Results
+
+Performance on 10,000 test samples (binary classification):
+
+| Model | Accuracy | F1 Score | Precision | Recall |
+|-------|----------|----------|-----------|--------|
+| **Logistic Regression** | **89.6%** | 0.896 | 0.896 | 0.896 |
+| Naive Bayes | 87.1% | 0.871 | 0.871 | 0.871 |
+| VADER | 70.5% | 0.699 | 0.770 | 0.705 |
+| Ensemble (VADER+TextBlob) | 70.3% | 0.698 | 0.774 | 0.703 |
+| TextBlob | 61.5% | 0.622 | 0.794 | 0.615 |
+
+*ML models significantly outperform rule-based methods when labeled training data is available.*
 
 ## Project Structure
 
@@ -48,22 +61,22 @@ nlp-sentiment-analysis/
 │   ├── model_evaluator.py     # Model comparison and metrics
 │   ├── opinion_miner.py       # Aspect extraction, driver analysis
 │   └── visualizer.py          # Charts and visualizations
-├── data/                      # Generated data files
-├── models/                    # Saved ML models
-├── outputs/                   # Visualization outputs
-└── results/                   # Evaluation results
+├── data/                      # Generated data files (gitignored)
+├── models/                    # Saved ML models (gitignored)
+├── outputs/                   # Visualization outputs (gitignored)
+└── results/                   # Evaluation results (gitignored)
 ```
 
-## Installation
+## Quick Start
 
 ### 1. Clone the repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/YOUR_USERNAME/nlp-sentiment-analysis.git
 cd nlp-sentiment-analysis
 ```
 
-### 2. Create virtual environment (recommended)
+### 2. Create virtual environment
 
 ```bash
 python -m venv venv
@@ -77,40 +90,29 @@ venv\Scripts\activate     # Windows
 pip install -r requirements.txt
 ```
 
-### 4. Download NLTK data
-
-```python
-import nltk
-nltk.download('vader_lexicon')
-nltk.download('punkt')
-nltk.download('stopwords')
-nltk.download('wordnet')
-nltk.download('averaged_perceptron_tagger')
-```
-
-### 5. (Optional) Download spaCy model for aspect extraction
-
-```bash
-python -m spacy download en_core_web_sm
-```
-
-## Usage
-
-### Run the full pipeline
+### 4. Run the pipeline
 
 ```bash
 python main.py
 ```
 
 This will:
-1. Fetch Amazon reviews from HuggingFace (~50K reviews)
+1. Download 50,000 real Amazon reviews from HuggingFace
 2. Preprocess text (clean, tokenize, lemmatize)
 3. Run VADER + TextBlob sentiment analysis
 4. Train Logistic Regression and Naive Bayes models
 5. Evaluate and compare all models
 6. Generate visualizations
 
-### Pipeline options
+### 5. Launch the dashboard
+
+```bash
+python -m streamlit run app.py
+```
+
+Open http://localhost:8501 in your browser.
+
+## Pipeline Options
 
 ```bash
 # Force reload data from HuggingFace
@@ -125,14 +127,6 @@ python main.py --train-transformer
 # Limit dataset size for quick testing
 python main.py --sample-size 5000
 ```
-
-### Run the dashboard
-
-```bash
-python -m streamlit run app.py
-```
-
-Open http://localhost:8501 in your browser.
 
 ## Models & Methodology
 
@@ -150,7 +144,7 @@ Open http://localhost:8501 in your browser.
 |-------|-------------|
 | **Logistic Regression** | Linear classifier with TF-IDF features (1-2 grams, 10K features). Balanced class weights. |
 | **Naive Bayes** | Multinomial NB with TF-IDF features. Fast training, good baseline. |
-| **DistilBERT** | Fine-tuned transformer model. ~97% of BERT performance, 60% faster. |
+| **DistilBERT** | Fine-tuned transformer model. ~97% of BERT performance, 60% faster. (Optional) |
 
 ### Evaluation Metrics
 
@@ -161,45 +155,31 @@ Open http://localhost:8501 in your browser.
 - **Cohen's Kappa**: Agreement accounting for chance
 - **Matthews Correlation Coefficient**: Balanced measure for imbalanced classes
 
-## Results
-
-Sample results (actual performance depends on data sample):
-
-| Model | Accuracy | F1 (weighted) | F1 (macro) |
-|-------|----------|---------------|------------|
-| Logistic Regression | ~0.85 | ~0.84 | ~0.75 |
-| Naive Bayes | ~0.80 | ~0.79 | ~0.70 |
-| Ensemble (VADER+TB) | ~0.65 | ~0.60 | ~0.55 |
-| VADER | ~0.60 | ~0.55 | ~0.50 |
-| TextBlob | ~0.55 | ~0.50 | ~0.45 |
-
-*Note: Rule-based methods (VADER, TextBlob) are not trained on the data and serve as unsupervised baselines.*
-
 ## Key Insights
 
 1. **ML models significantly outperform rule-based methods** when labeled training data is available
-2. **Logistic Regression** achieves strong performance with simple TF-IDF features
-3. **VADER** performs reasonably well as an unsupervised baseline
-4. **TextBlob** tends to produce more neutral predictions
+2. **Logistic Regression** achieves 89.6% accuracy with simple TF-IDF features
+3. **VADER** performs reasonably well (70.5%) as an unsupervised baseline
+4. **TextBlob** tends to produce more neutral predictions, lowering accuracy
 5. **Aspect analysis** reveals which product features drive positive/negative sentiment
 
-## Citation
+## Technologies Used
 
-If you use the Amazon Reviews dataset, please cite:
-
-```bibtex
-@article{hou2024bridging,
-  title={Bridging Language and Items for Retrieval and Recommendation},
-  author={Hou, Yupeng and Li, Jiacheng and He, Zhankui and Yan, An and Chen, Xiusi and McAuley, Julian},
-  journal={arXiv preprint arXiv:2403.03952},
-  year={2024}
-}
-```
+- **Python 3.10+**
+- **scikit-learn** - ML models and evaluation
+- **NLTK** - VADER sentiment, tokenization
+- **TextBlob** - Pattern-based sentiment
+- **HuggingFace Datasets** - Data loading
+- **Streamlit** - Interactive dashboard
+- **Plotly/Matplotlib** - Visualizations
+- **pandas/numpy** - Data processing
 
 ## License
 
-This project is for educational and portfolio purposes. The Amazon Reviews dataset is subject to its own license terms.
+MIT License - see [LICENSE](LICENSE) for details.
+
+The Amazon Reviews dataset is subject to Amazon's terms of use for research purposes.
 
 ## Author
 
-Built as a demonstration of NLP sentiment analysis techniques, from rule-based methods to fine-tuned transformers.
+Built as a demonstration of NLP sentiment analysis techniques, from rule-based methods to machine learning classifiers.
