@@ -1,6 +1,7 @@
 """
 Streamlit Dashboard for NLP Sentiment Analysis & Opinion Mining.
 Interactive exploration of Amazon product reviews with ML model comparison.
+Supports automatic data generation for Streamlit Cloud deployment.
 """
 
 import streamlit as st
@@ -11,6 +12,9 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from pathlib import Path
 import json
+import sys
+
+sys.path.insert(0, str(Path(__file__).parent))
 
 try:
     from wordcloud import WordCloud
@@ -24,6 +28,9 @@ except ImportError:
 DATA_DIR = Path(__file__).parent / "data"
 OUTPUT_DIR = Path(__file__).parent / "outputs"
 RESULTS_DIR = Path(__file__).parent / "results"
+MODELS_DIR = Path(__file__).parent / "models"
+
+CLOUD_SAMPLE_SIZE = 5000
 
 COLORS = {
     "positive": "#2ecc71",
@@ -34,13 +41,80 @@ CATEGORY_PALETTE = ["#3498db", "#e74c3c", "#2ecc71", "#f39c12", "#9b59b6", "#1ab
 MODEL_PALETTE = ["#3498db", "#2ecc71", "#e74c3c", "#f39c12", "#9b59b6", "#1abc9c"]
 
 
-@st.cache_data
+def generate_data_for_cloud(sample_size=CLOUD_SAMPLE_SIZE):
+    """
+    Generate data for Streamlit Cloud deployment.
+    Downloads from HuggingFace, preprocesses, and runs sentiment analysis.
+    """
+    import nltk
+    nltk.download('vader_lexicon', quiet=True)
+    nltk.download('punkt', quiet=True)
+    nltk.download('punkt_tab', quiet=True)
+    nltk.download('stopwords', quiet=True)
+    nltk.download('wordnet', quiet=True)
+    nltk.download('averaged_perceptron_tagger', quiet=True)
+    nltk.download('averaged_perceptron_tagger_eng', quiet=True)
+    
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    MODELS_DIR.mkdir(parents=True, exist_ok=True)
+    
+    st.info(f"Downloading {sample_size:,} Amazon reviews from HuggingFace...")
+    
+    from src.data_loader import load_amazon_polarity
+    df = load_amazon_polarity(
+        sample_size=sample_size,
+        output_path=DATA_DIR / "amazon_reviews.csv",
+        force_reload=True,
+        verbose=False,
+    )
+    
+    st.info("Preprocessing text data...")
+    
+    from src.preprocessor import preprocess_reviews
+    df = preprocess_reviews(df, verbose=False)
+    df.to_csv(DATA_DIR / "preprocessed_reviews.csv", index=False)
+    
+    st.info("Running sentiment analysis (VADER + TextBlob)...")
+    
+    from src.sentiment_analyzer import run_sentiment_analysis
+    df = run_sentiment_analysis(df, verbose=False)
+    df.to_csv(DATA_DIR / "reviews_with_sentiment.csv", index=False)
+    
+    st.info("Training ML model...")
+    
+    from src.ml_models import train_model, evaluate_model, save_model, prepare_data
+    
+    X_train, X_test, y_train, y_test = prepare_data(
+        df, 
+        text_column="processed_text", 
+        label_column="ground_truth",
+        test_size=0.2
+    )
+    
+    pipeline = train_model(X_train, y_train, "logistic_regression", verbose=False)
+    results = evaluate_model(pipeline, X_test, y_test, "Logistic Regression")
+    save_model(pipeline, "logistic_regression", MODELS_DIR)
+    
+    st.info("Generating evaluation results...")
+    
+    from src.model_evaluator import compare_models, save_comparison_results
+    comparison = compare_models(df, ml_results={"logistic_regression": results}, verbose=False)
+    save_comparison_results(comparison, RESULTS_DIR)
+    
+    st.success(f"Data generation complete! Processed {len(df):,} reviews.")
+    
+    return df
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
 def load_data():
-    """Load analyzed review data."""
+    """Load analyzed review data. Generate if not found (for cloud deployment)."""
     path = DATA_DIR / "reviews_with_sentiment.csv"
+    
     if not path.exists():
-        st.error("Analyzed data not found. Run `python main.py` first to generate and analyze data.")
-        st.stop()
+        with st.spinner("First run: Downloading and processing data (this may take 2-3 minutes)..."):
+            generate_data_for_cloud()
     
     df = pd.read_csv(path)
     

@@ -1,0 +1,28 @@
+# Lightweight requirements for Streamlit Cloud deployment
+# Excludes torch/transformers (too heavy for cloud free tier)
+
+# Core data processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# NLP libraries
+nltk>=3.8.0
+textblob>=0.17.1
+
+# Machine Learning
+scikit-learn>=1.3.0
+joblib>=1.3.0
+
+# HuggingFace datasets (for data loading)
+datasets>=2.14.0
+
+# Visualization
+matplotlib>=3.7.0
+plotly>=5.15.0
+wordcloud>=1.9.0
+
+# Dashboard
+streamlit>=1.28.0
+
+# Progress bars
+tqdm>=4.65.0
