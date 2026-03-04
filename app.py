@@ -176,6 +176,30 @@ BRAND_MAX_LENGTH = 50  # Exclude very long strings (artist lists, etc.)
 BRAND_TOP_N = 50  # Show top N brands by review count in dropdown
 
 
+def _is_valid_brand(brand):
+    """Return True if brand is a real brand (not format/metadata noise)."""
+    if pd.isna(brand) or not str(brand).strip():
+        return False
+    s = str(brand).strip()
+    if len(s) > BRAND_MAX_LENGTH:
+        return False
+    lower = s.lower()
+    if lower == "unknown":
+        return False
+    for pat in BRAND_EXCLUDE_PATTERNS:
+        if pat in lower:
+            return False
+    return True
+
+
+def _filter_valid_brands(df):
+    """Filter df to only rows with valid brands. Keeps rows without brand column."""
+    if "brand" not in df.columns:
+        return df
+    mask = df["brand"].apply(_is_valid_brand)
+    return df[mask].copy()
+
+
 def _get_filter_brands(df, top_n=BRAND_TOP_N):
     """Get clean brand list for filter: exclude noise, limit to top N by count."""
     if "brand" not in df.columns:
@@ -252,6 +276,7 @@ def render_sidebar(df):
             (filtered["review_date"].dt.date <= date_range[1])
         ]
     
+    filtered = _filter_valid_brands(filtered)
     st.sidebar.metric("Filtered Reviews", f"{len(filtered):,}")
     return filtered
 
