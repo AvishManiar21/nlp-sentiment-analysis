@@ -1,13 +1,8 @@
 """
 Data loader for Amazon Reviews datasets from HuggingFace.
-Uses fancyzhx/amazon_polarity - 3.6M REAL Amazon reviews with binary sentiment.
 
-This dataset contains real Amazon product reviews with:
-- Real review text (title + content)
-- Real sentiment labels derived from star ratings:
-  - Negative (label=0): 1-2 star reviews
-  - Positive (label=1): 4-5 star reviews
-  - (3-star neutral reviews excluded in original dataset)
+Primary: McAuley-Lab/Amazon-Reviews-2023 - REAL categories, brands, ratings, timestamps.
+Fallback: fancyzhx/amazon_polarity - real text and labels, synthetic categories/brands.
 """
 
 import pandas as pd
@@ -21,6 +16,117 @@ try:
 except ImportError:
     HF_AVAILABLE = False
     print("Warning: 'datasets' library not installed. Run: pip install datasets")
+
+MCAULEY_CATEGORIES = [
+    "All_Beauty",  # 701K reviews, 112K meta - manageable
+    "Digital_Music",  # 130K reviews, 70K meta - small
+]
+
+
+def load_amazon_mcauley(
+    sample_size=50000,
+    output_path=None,
+    force_reload=False,
+    verbose=True,
+):
+    """
+    Load REAL Amazon reviews from McAuley-Lab/Amazon-Reviews-2023.
+    Real categories, real brands (store), real ratings, real timestamps.
+    Falls back to amazon_polarity if loading fails.
+    """
+    if not HF_AVAILABLE:
+        raise ImportError("datasets library required. Install with: pip install datasets")
+
+    if output_path is None:
+        output_path = Path(__file__).parent.parent / "data" / "amazon_reviews.csv"
+    output_path = Path(output_path)
+
+    if output_path.exists() and not force_reload:
+        if verbose:
+            print(f"Loading cached reviews from {output_path}")
+        df = pd.read_csv(output_path)
+        if verbose:
+            print(f"Loaded {len(df):,} reviews from cache")
+        return df
+
+    if verbose:
+        print("\n" + "=" * 60)
+        print("Fetching McAuley-Lab Amazon Reviews 2023 (REAL metadata)")
+        print("=" * 60)
+
+    all_reviews = []
+    all_meta = []
+
+    for cat in MCAULEY_CATEGORIES:
+        try:
+            n_per_cat = max(5000, sample_size // len(MCAULEY_CATEGORIES))
+            rev_config = f"raw_review_{cat}"
+            meta_config = f"raw_meta_{cat}"
+            if verbose:
+                print(f"Loading {cat}...")
+            rev_ds = load_dataset(
+                "McAuley-Lab/Amazon-Reviews-2023",
+                rev_config,
+                split=f"full[:{n_per_cat}]",
+                trust_remote_code=True,
+            )
+            meta_ds = load_dataset(
+                "McAuley-Lab/Amazon-Reviews-2023",
+                meta_config,
+                split="full",
+                trust_remote_code=True,
+            )
+            rev_df = rev_ds.to_pandas()
+            meta_df = meta_ds.to_pandas()
+            meta_sub = meta_df[["parent_asin", "main_category", "store"]].drop_duplicates("parent_asin")
+            rev_df = rev_df.merge(
+                meta_sub, on="parent_asin", how="left", suffixes=("", "_meta")
+            )
+            rev_df["category"] = rev_df["main_category"].fillna(cat.replace("_", " "))
+            rev_df["brand"] = rev_df["store"].fillna("Unknown")
+            rev_df["review_date"] = pd.to_datetime(rev_df["timestamp"], unit="ms", errors="coerce")
+            all_reviews.append(rev_df)
+        except Exception as e:
+            if verbose:
+                print(f"  Skipping {cat}: {e}")
+            continue
+
+    if not all_reviews:
+        if verbose:
+            print("McAuley-Lab load failed, falling back to amazon_polarity...")
+        return load_amazon_polarity(sample_size, output_path, force_reload, verbose)
+
+    df = pd.concat(all_reviews, ignore_index=True)
+    if len(df) > sample_size:
+        df = df.sample(n=sample_size, random_state=42).reset_index(drop=True)
+
+    mapped = _map_mcauley_to_schema(df, verbose)
+    mapped = filter_reviews(mapped, verbose=verbose)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    mapped.to_csv(output_path, index=False)
+    if verbose:
+        print(f"Saved {len(mapped):,} reviews to {output_path}")
+    return mapped
+
+
+def _map_mcauley_to_schema(df, verbose=True):
+    """Map McAuley-Lab schema to project schema."""
+    mapped = pd.DataFrame()
+    mapped["review_id"] = [f"AMZ-{i:07d}" for i in range(len(df))]
+    mapped["review_text"] = (
+        df["title"].fillna("").astype(str) + ". " + df["text"].fillna("").astype(str)
+    ).str.strip().str.replace(r"^\.\s*", "", regex=True)
+    mapped["review_title"] = df["title"].fillna("").astype(str)
+    mapped["rating"] = df["rating"].clip(1, 5).astype(int)
+    mapped["ground_truth"] = mapped["rating"].apply(
+        lambda r: "negative" if r <= 2 else "positive"
+    )
+    mapped["category"] = df["category"].fillna("Unknown").astype(str)
+    mapped["brand"] = df["brand"].fillna("Unknown").astype(str)
+    mapped["review_date"] = df.get("review_date", pd.NaT)
+    mapped["verified_purchase"] = df.get("verified_purchase", True)
+    mapped["helpful_votes"] = df.get("helpful_vote", 0).fillna(0).astype(int)
+    return mapped
 
 
 def load_amazon_polarity(
@@ -183,16 +289,27 @@ def filter_reviews(df, min_length=20, max_length=5000, verbose=True):
     return df.reset_index(drop=True)
 
 
-def load_amazon_reviews(output_path=None, categories=None, force_reload=False):
+def load_amazon_reviews(output_path=None, categories=None, force_reload=False, sample_size=50000, verbose=True):
     """
     Main entry point to load Amazon reviews.
-    Uses fancyzhx/amazon_polarity dataset with REAL Amazon review text.
+    Tries McAuley-Lab (real categories, brands) first, falls back to amazon_polarity.
     """
-    return load_amazon_polarity(
-        sample_size=50000,
-        output_path=output_path,
-        force_reload=force_reload,
-    )
+    try:
+        return load_amazon_mcauley(
+            sample_size=sample_size,
+            output_path=output_path,
+            force_reload=force_reload,
+            verbose=verbose,
+        )
+    except Exception as e:
+        if verbose:
+            print(f"McAuley-Lab unavailable ({e}), using amazon_polarity...")
+        return load_amazon_polarity(
+            sample_size=sample_size,
+            output_path=output_path,
+            force_reload=force_reload,
+            verbose=verbose,
+        )
 
 
 def get_dataset_stats(df):

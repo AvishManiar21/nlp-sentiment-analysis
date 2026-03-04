@@ -61,8 +61,8 @@ def generate_data_for_cloud(sample_size=CLOUD_SAMPLE_SIZE):
     
     st.info(f"Downloading {sample_size:,} Amazon reviews from HuggingFace...")
     
-    from src.data_loader import load_amazon_polarity
-    df = load_amazon_polarity(
+    from src.data_loader import load_amazon_reviews
+    df = load_amazon_reviews(
         sample_size=sample_size,
         output_path=DATA_DIR / "amazon_reviews.csv",
         force_reload=True,
