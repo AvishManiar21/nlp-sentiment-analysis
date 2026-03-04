@@ -70,6 +70,13 @@ def step_load_data(args, data_dir):
     
     reviews_path = data_dir / "amazon_reviews.csv"
     
+    if args.force_reload:
+        for stale in ["preprocessed_reviews.csv", "reviews_with_sentiment.csv"]:
+            p = data_dir / stale
+            if p.exists():
+                p.unlink()
+                print(f"  Cleared stale cache: {stale}")
+    
     df = load_amazon_reviews(
         output_path=reviews_path,
         force_reload=args.force_reload,

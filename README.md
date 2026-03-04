@@ -4,13 +4,13 @@
 [![codecov](https://codecov.io/gh/AvishManiar21/nlp-sentiment-analysis/branch/master/graph/badge.svg)](https://codecov.io/gh/AvishManiar21/nlp-sentiment-analysis)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![HuggingFace Dataset](https://img.shields.io/badge/HuggingFace-Dataset-orange)](https://huggingface.co/datasets/fancyzhx/amazon_polarity)
+[![HuggingFace Dataset](https://img.shields.io/badge/HuggingFace-Dataset-orange)](https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023)
 
 A comprehensive sentiment analysis pipeline using **real Amazon product reviews** with multiple ML models, rigorous evaluation metrics, and interactive visualizations.
 
 ## Features
 
-- **Real-World Data**: 50,000 genuine Amazon product reviews from HuggingFace
+- **Real-World Data**: ~50,000 genuine Amazon product reviews with real timestamps, categories, and brands
 - **Multiple Sentiment Models**:
   - VADER (rule-based, optimized for social media)
   - TextBlob (pattern-based polarity analysis)
@@ -24,14 +24,13 @@ A comprehensive sentiment analysis pipeline using **real Amazon product reviews*
 
 ## Dataset
 
-**Amazon Polarity Dataset** (`fancyzhx/amazon_polarity`) - 3.6M real Amazon product reviews.
+**Primary: McAuley-Lab Amazon Reviews 2023** – Real categories, brands, ratings, and timestamps.
 
-- **Source**: HuggingFace Datasets
-- **Size**: 3,600,000 reviews (we sample 50,000 for efficient training)
-- **Labels**: Binary sentiment derived from star ratings
-  - **Negative**: 1-2 star reviews
-  - **Positive**: 4-5 star reviews
-- **Content**: Real review text written by Amazon customers
+- **Source**: JSONL files from [HuggingFace](https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023) (UCSD datarepo URLs attempted first)
+- **Fields**: Review text, ratings, timestamps, main category, store (brand), helpful votes, verified purchase
+- **Sample size**: ~50,000 reviews (configurable; adjust for larger samples on more powerful machines)
+- **Labels**: Sentiment from star ratings (≤2 negative, ≥4 positive, 3 neutral)
+
 
 ## Results
 
@@ -105,7 +104,7 @@ python main.py
 ```
 
 This will:
-1. Download 50,000 real Amazon reviews from HuggingFace
+1. Download ~50,000 real Amazon reviews (McAuley-Lab JSONL, with amazon_polarity fallback)
 2. Preprocess text (clean, tokenize, lemmatize)
 3. Run VADER + TextBlob sentiment analysis
 4. Train Logistic Regression and Naive Bayes models

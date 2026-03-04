@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from src.data_loader import (
     map_to_project_schema,
+    map_mcauley_to_project_schema,
     filter_reviews,
     get_dataset_stats,
 )
@@ -68,6 +69,55 @@ class TestMapToProjectSchema:
         result = map_to_project_schema(df, verbose=False)
         assert "Love it" in result["review_text"].iloc[0]
         assert "Great product" in result["review_text"].iloc[0]
+
+
+class TestMapMcauleyToProjectSchema:
+    """Tests for map_mcauley_to_project_schema function."""
+
+    def test_returns_dataframe(self):
+        df = pd.DataFrame({
+            "title": ["Love it"],
+            "text": ["Great product!"],
+            "rating": [5],
+            "category": ["Electronics"],
+            "brand": ["Acme"],
+            "helpful_vote": [0],
+            "verified_purchase": [True],
+        })
+        df["review_date"] = pd.NaT
+        result = map_mcauley_to_project_schema(df, verbose=False)
+        assert isinstance(result, pd.DataFrame)
+
+    def test_creates_review_date_column(self):
+        df = pd.DataFrame({
+            "title": ["A"],
+            "text": ["B" * 30],
+            "rating": [5],
+            "category": ["X"],
+            "brand": ["Y"],
+            "helpful_vote": [0],
+            "verified_purchase": [True],
+        })
+        df["review_date"] = pd.to_datetime(["2020-01-15"])
+        result = map_mcauley_to_project_schema(df, verbose=False)
+        assert "review_date" in result.columns
+        assert result["review_date"].notna().all()
+
+    def test_maps_rating_to_ground_truth(self):
+        df = pd.DataFrame({
+            "title": ["A", "B", "C"],
+            "text": ["x" * 30] * 3,
+            "rating": [1, 3, 5],
+            "category": ["X"] * 3,
+            "brand": ["Y"] * 3,
+            "helpful_vote": [0] * 3,
+            "verified_purchase": [True] * 3,
+        })
+        df["review_date"] = pd.NaT
+        result = map_mcauley_to_project_schema(df, verbose=False)
+        assert result["ground_truth"].iloc[0] == "negative"
+        assert result["ground_truth"].iloc[1] == "positive"
+        assert result["ground_truth"].iloc[2] == "positive"
 
 
 class TestFilterReviews:
