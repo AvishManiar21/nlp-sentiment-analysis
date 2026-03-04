@@ -150,12 +150,17 @@ def map_to_project_schema(df, verbose=True):
         mapped["ground_truth"] = "neutral"
     
     categories = [
-        "Electronics", "Books", "Home & Kitchen", "Clothing", 
+        "Electronics", "Books", "Home & Kitchen", "Clothing",
         "Sports & Outdoors", "Health & Personal Care", "Toys & Games",
         "Automotive", "Office Products", "Pet Supplies"
     ]
+    brands = [
+        "Amazon", "Apple", "Samsung", "Sony", "LG", "Microsoft",
+        "Dell", "HP", "Bose", "JBL", "Fitbit", "Nike"
+    ]
     np.random.seed(42)
     mapped["category"] = np.random.choice(categories, size=len(df))
+    mapped["brand"] = np.random.choice(brands, size=len(df))
     
     mapped["verified_purchase"] = True
     mapped["helpful_votes"] = 0
@@ -195,6 +200,7 @@ def get_dataset_stats(df):
     stats = {
         "total_reviews": len(df),
         "categories": df["category"].nunique() if "category" in df.columns else 0,
+        "brands": df["brand"].nunique() if "brand" in df.columns else 0,
         "avg_review_length": df["review_text"].str.len().mean(),
         "median_review_length": df["review_text"].str.len().median(),
         "rating_distribution": df["rating"].value_counts().sort_index().to_dict() if "rating" in df.columns else {},
