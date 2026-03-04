@@ -164,6 +164,38 @@ def render_header():
     st.divider()
 
 
+# Non-brands to exclude (McAuley store field often has format/metadata for Digital Music)
+BRAND_EXCLUDE_PATTERNS = [
+    "unknown",
+    "format: audio cd",
+    "format: audio cd library binding",
+    "format: mp3 music",
+    "format: vinyl",
+]
+BRAND_MAX_LENGTH = 50  # Exclude very long strings (artist lists, etc.)
+BRAND_TOP_N = 50  # Show top N brands by review count in dropdown
+
+
+def _get_filter_brands(df, top_n=BRAND_TOP_N):
+    """Get clean brand list for filter: exclude noise, limit to top N by count."""
+    if "brand" not in df.columns:
+        return []
+    brands = df["brand"].dropna().astype(str).str.strip()
+    if brands.empty:
+        return []
+    # Exclude known non-brands
+    mask = brands.str.len() <= BRAND_MAX_LENGTH
+    for pat in BRAND_EXCLUDE_PATTERNS:
+        mask &= ~brands.str.lower().str.contains(pat, regex=False)
+    mask &= (brands != "") & (brands.str.lower() != "unknown")
+    valid = brands[mask]
+    if valid.empty:
+        return []
+    # Top N by count
+    top = valid.value_counts().head(top_n)
+    return ["All"] + sorted(top.index.tolist())
+
+
 def render_sidebar(df):
     """Render sidebar filters."""
     st.sidebar.header("Filters")
@@ -173,9 +205,10 @@ def render_sidebar(df):
     
     if "brand" in df.columns:
         if selected_category != "All":
-            brands = ["All"] + sorted(df[df["category"] == selected_category]["brand"].dropna().unique().tolist())
+            sub = df[df["category"] == selected_category]
+            brands = _get_filter_brands(sub)
         else:
-            brands = ["All"] + sorted(df["brand"].dropna().unique().tolist())
+            brands = _get_filter_brands(df)
         selected_brand = st.sidebar.selectbox("Brand", brands)
     else:
         selected_brand = "All"
