@@ -71,8 +71,8 @@ def generate_data_for_cloud(sample_size=CLOUD_SAMPLE_SIZE):
     
     st.info("Preprocessing text data...")
     
-    from src.preprocessor import preprocess_reviews
-    df = preprocess_reviews(df, verbose=False)
+    from src.preprocessor import preprocess_dataframe
+    df = preprocess_dataframe(df, verbose=False)
     df.to_csv(DATA_DIR / "preprocessed_reviews.csv", index=False)
     
     st.info("Running sentiment analysis (VADER + TextBlob)...")
