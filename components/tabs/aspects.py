@@ -13,7 +13,7 @@ try:
     import matplotlib.pyplot as plt
     WORDCLOUD_AVAILABLE = True
 except ImportError:
-WORDCLOUD_AVAILABLE = False
+    WORDCLOUD_AVAILABLE = False
 
 
 @st.cache_data(show_spinner=False)
