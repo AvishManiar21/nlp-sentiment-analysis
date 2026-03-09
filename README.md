@@ -6,6 +6,12 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![HuggingFace Dataset](https://img.shields.io/badge/HuggingFace-Dataset-orange)](https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023)
 
+## Live Demo
+
+Try the interactive dashboard: **[NLP Sentiment Analysis App](https://nlp-sentiments-analysis.streamlit.app/)**
+
+---
+
 A comprehensive sentiment analysis pipeline using **real Amazon product reviews** with multiple ML models, rigorous evaluation metrics, and interactive visualizations.
 
 ## Features

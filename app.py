@@ -30,7 +30,7 @@ OUTPUT_DIR = Path(__file__).parent / "outputs"
 RESULTS_DIR = Path(__file__).parent / "results"
 MODELS_DIR = Path(__file__).parent / "models"
 
-CLOUD_SAMPLE_SIZE = 10000
+CLOUD_SAMPLE_SIZE = 30000
 
 COLORS = {
     "positive": "#22c55e",
