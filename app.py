@@ -33,12 +33,42 @@ MODELS_DIR = Path(__file__).parent / "models"
 CLOUD_SAMPLE_SIZE = 10000
 
 COLORS = {
-    "positive": "#2ecc71",
-    "negative": "#e74c3c",
-    "neutral": "#95a5a6",
+    "positive": "#22c55e",
+    "negative": "#ef4444",
+    "neutral": "#94a3b8",
 }
-CATEGORY_PALETTE = ["#3498db", "#e74c3c", "#2ecc71", "#f39c12", "#9b59b6", "#1abc9c"]
-MODEL_PALETTE = ["#3498db", "#2ecc71", "#e74c3c", "#f39c12", "#9b59b6", "#1abc9c"]
+CATEGORY_PALETTE = ["#3b82f6", "#8b5cf6", "#22c55e", "#f59e0b", "#ec4899", "#06b6d4"]
+MODEL_PALETTE = ["#3b82f6", "#22c55e", "#ef4444", "#f59e0b", "#8b5cf6", "#06b6d4"]
+
+# Unified Plotly chart theme
+PLOTLY_THEME = dict(
+    template="plotly_white",
+    font=dict(family="Inter, system-ui, sans-serif", size=12, color="#334155"),
+    title_font=dict(size=16, color="#1e293b"),
+    paper_bgcolor="white",
+    plot_bgcolor="#f8fafc",
+    margin=dict(t=60, b=50, l=50, r=30),
+    hoverlabel=dict(bgcolor="white", font_size=12, font_family="Inter"),
+    legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="right",
+        x=1,
+        bgcolor="rgba(255,255,255,0.8)",
+        bordercolor="#e2e8f0",
+    ),
+    xaxis=dict(showgrid=True, gridcolor="#e2e8f0", zeroline=False),
+    yaxis=dict(showgrid=True, gridcolor="#e2e8f0", zeroline=False),
+    colorway=CATEGORY_PALETTE,
+)
+
+
+def _apply_chart_theme(fig, height=420, **overrides):
+    """Apply unified theme to a Plotly figure. Overrides merge with theme."""
+    layout = {**PLOTLY_THEME, "height": height, **overrides}
+    fig.update_layout(**layout)
+    return fig
 
 
 def generate_data_for_cloud(sample_size=CLOUD_SAMPLE_SIZE):
@@ -319,12 +349,7 @@ def render_sentiment_overview(df):
             textinfo="label+percent",
             textfont_size=14,
         )])
-        fig.update_layout(
-            title="Sentiment Split",
-            showlegend=False,
-            height=400,
-            margin=dict(t=50, b=20),
-        )
+        _apply_chart_theme(fig, title="Sentiment Split", showlegend=False)
         st.plotly_chart(fig, use_container_width=True)
     
     with col2:
@@ -335,15 +360,9 @@ def render_sentiment_overview(df):
                 marker_color=COLORS["positive"], opacity=0.7,
                 name="Ensemble Score",
             ))
-            fig.add_vline(x=0, line_dash="dash", line_color="red", annotation_text="Neutral")
-            fig.update_layout(
-                title="Sentiment Score Distribution",
-                xaxis_title="Ensemble Sentiment Score",
-                yaxis_title="Count",
-                template="plotly_white",
-                height=400,
-                margin=dict(t=50, b=20),
-            )
+            fig.add_vline(x=0, line_dash="dash", line_color="#ef4444", annotation_text="Neutral")
+            _apply_chart_theme(fig, title="Sentiment Score Distribution",
+                xaxis_title="Ensemble Sentiment Score", yaxis_title="Count")
             st.plotly_chart(fig, use_container_width=True)
 
 
@@ -376,12 +395,7 @@ def render_ground_truth_comparison(df):
             opacity=1.0,
             marker_pattern_shape="/",
         ))
-        fig.update_layout(
-            title="Label Distribution Comparison",
-            barmode="group",
-            template="plotly_white",
-            height=400,
-        )
+        _apply_chart_theme(fig, title="Label Distribution Comparison", barmode="group")
         st.plotly_chart(fig, use_container_width=True)
     
     with col2:
@@ -398,10 +412,7 @@ def render_ground_truth_comparison(df):
             color_continuous_scale="Blues",
             text_auto=True,
         )
-        fig.update_layout(
-            title="Confusion Matrix (Ensemble)",
-            height=400,
-        )
+        _apply_chart_theme(fig, title="Confusion Matrix (Ensemble)")
         st.plotly_chart(fig, use_container_width=True)
 
 
@@ -433,8 +444,7 @@ def render_category_analysis(df):
                 color_continuous_scale="RdYlGn",
                 title="Average Sentiment by Category",
             )
-            fig.update_layout(height=400, template="plotly_white",
-                              coloraxis_colorbar=dict(title="Sentiment"))
+            _apply_chart_theme(fig, coloraxis_colorbar=dict(title="Sentiment"))
             st.plotly_chart(fig, use_container_width=True)
     
     with col2:
@@ -458,13 +468,8 @@ def render_category_analysis(df):
             y=cat_stats["negative_pct"],
             marker_color=COLORS["negative"],
         ))
-        fig.update_layout(
-            barmode="stack",
-            title="Sentiment Breakdown by Category",
-            yaxis_title="Percentage (%)",
-            template="plotly_white",
-            height=400,
-        )
+        _apply_chart_theme(fig, barmode="stack", title="Sentiment Breakdown by Category",
+            yaxis_title="Percentage (%)")
         st.plotly_chart(fig, use_container_width=True)
 
 
@@ -503,12 +508,7 @@ def render_temporal_trends(df):
             labels={"year_month": "Month", "avg_sentiment": "Avg Sentiment"},
             color_discrete_sequence=CATEGORY_PALETTE,
         )
-        fig.update_layout(
-            xaxis_tickangle=-45,
-            template="plotly_white",
-            height=450,
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        )
+        _apply_chart_theme(fig, height=450, xaxis_tickangle=-45)
         st.plotly_chart(fig, use_container_width=True)
 
 
@@ -548,7 +548,7 @@ def render_aspect_analysis(df):
                 orientation="h",
                 title="Most Discussed Aspects",
             )
-        fig.update_layout(height=450, template="plotly_white")
+        _apply_chart_theme(fig, height=450)
         st.plotly_chart(fig, use_container_width=True)
     
     with col2:
@@ -569,13 +569,8 @@ def render_aspect_analysis(df):
                 x=top_aspects["negative_pct"],
                 orientation="h", marker_color=COLORS["negative"],
             ))
-            fig.update_layout(
-                barmode="stack",
-                title="Sentiment Breakdown per Aspect",
-                xaxis_title="Percentage (%)",
-                template="plotly_white",
-                height=450,
-            )
+            _apply_chart_theme(fig, height=450, barmode="stack",
+                title="Sentiment Breakdown per Aspect", xaxis_title="Percentage (%)")
             st.plotly_chart(fig, use_container_width=True)
 
 
@@ -606,9 +601,10 @@ def render_brand_comparison(df):
             title="Brand Positioning: Rating vs Sentiment",
             labels={"avg_rating": "Average Rating", "avg_sentiment": "Average Sentiment"},
             color_discrete_sequence=CATEGORY_PALETTE,
-            size_max=40,
+            size_max=45,
         )
-        fig.update_layout(template="plotly_white", height=500)
+        fig.update_traces(marker=dict(line=dict(width=0.5, color="white")), selector=dict(mode="markers"))
+        _apply_chart_theme(fig, height=500)
         st.plotly_chart(fig, use_container_width=True)
 
 
@@ -624,29 +620,29 @@ def render_wordclouds(df):
     
     text_col = "review_text" if "review_text" in df.columns else "cleaned_text"
     
+    def _render_wc(text, colormap, title):
+        if not text.strip():
+            return
+        wc = WordCloud(
+            width=800, height=380, background_color="#fafafa",
+            colormap=colormap, max_words=100, collocations=False,
+            min_font_size=10, max_font_size=120,
+        ).generate(text)
+        fig, ax = plt.subplots(figsize=(8, 4))
+        ax.imshow(wc, interpolation="bilinear")
+        ax.axis("off")
+        ax.set_title(title, fontsize=14, fontweight="bold", pad=10)
+        fig.patch.set_facecolor("white")
+        st.pyplot(fig)
+        plt.close(fig)
+    
     with col1:
-        st.markdown("**Positive Reviews**")
         pos_text = " ".join(df[df["sentiment_label"] == "positive"][text_col].dropna().astype(str).tolist())
-        if pos_text.strip():
-            wc = WordCloud(width=700, height=350, background_color="white",
-                           colormap="Greens", max_words=80, collocations=False).generate(pos_text)
-            fig, ax = plt.subplots(figsize=(7, 3.5))
-            ax.imshow(wc, interpolation="bilinear")
-            ax.axis("off")
-            st.pyplot(fig)
-            plt.close(fig)
+        _render_wc(pos_text, "Greens", "Positive Reviews — Key Words")
     
     with col2:
-        st.markdown("**Negative Reviews**")
         neg_text = " ".join(df[df["sentiment_label"] == "negative"][text_col].dropna().astype(str).tolist())
-        if neg_text.strip():
-            wc = WordCloud(width=700, height=350, background_color="white",
-                           colormap="Reds", max_words=80, collocations=False).generate(neg_text)
-            fig, ax = plt.subplots(figsize=(7, 3.5))
-            ax.imshow(wc, interpolation="bilinear")
-            ax.axis("off")
-            st.pyplot(fig)
-            plt.close(fig)
+        _render_wc(neg_text, "Reds", "Negative Reviews — Key Words")
 
 
 def render_vader_vs_textblob(df):
@@ -658,20 +654,22 @@ def render_vader_vs_textblob(df):
         return
     
     sample = df.sample(min(3000, len(df)), random_state=42)
+    hover_cols = ["rating", "category"] if "category" in sample.columns else ["rating"]
     fig = px.scatter(
         sample,
         x="vader_compound",
         y="textblob_polarity",
         color="sentiment_label",
-        opacity=0.4,
+        opacity=0.5,
         title="VADER Compound vs TextBlob Polarity",
         labels={"vader_compound": "VADER Compound", "textblob_polarity": "TextBlob Polarity"},
         color_discrete_map=COLORS,
-        hover_data=["product", "rating", "category"] if "product" in sample.columns else None,
+        hover_data=hover_cols,
     )
     fig.add_shape(type="line", x0=-1, y0=-1, x1=1, y1=1,
-                  line=dict(color="gray", dash="dash", width=1))
-    fig.update_layout(template="plotly_white", height=500)
+                  line=dict(color="#94a3b8", dash="dash", width=1))
+    fig.update_traces(marker=dict(size=6, line=dict(width=0.3, color="white")), selector=dict(mode="markers"))
+    _apply_chart_theme(fig, height=500)
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -750,7 +748,7 @@ def render_model_performance(df, eval_results):
             color_continuous_scale="RdYlGn",
             title="Model Accuracy",
         )
-        fig.update_layout(template="plotly_white", height=400)
+        _apply_chart_theme(fig)
         st.plotly_chart(fig, use_container_width=True)
         
         st.markdown("### F1 Score Comparison")
@@ -767,7 +765,7 @@ def render_model_performance(df, eval_results):
                     color_continuous_scale="RdYlGn",
                     title="Weighted F1 Score",
                 )
-                fig.update_layout(template="plotly_white", height=350)
+                _apply_chart_theme(fig, height=350)
                 st.plotly_chart(fig, use_container_width=True)
         
         with col2:
@@ -780,7 +778,7 @@ def render_model_performance(df, eval_results):
                     color_continuous_scale="RdYlGn",
                     title="Macro F1 Score",
                 )
-                fig.update_layout(template="plotly_white", height=350)
+                _apply_chart_theme(fig, height=350)
                 st.plotly_chart(fig, use_container_width=True)
     
     if "summary" in eval_results:

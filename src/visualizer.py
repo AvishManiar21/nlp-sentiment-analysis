@@ -20,18 +20,31 @@ import warnings
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
-sns.set_theme(style="whitegrid", palette="husl", font_scale=1.1)
-
+# Match app.py theme
 COLORS = {
-    "positive": "#2ecc71",
-    "negative": "#e74c3c",
-    "neutral": "#95a5a6",
-    "primary": "#3498db",
-    "secondary": "#9b59b6",
-    "accent": "#f39c12",
+    "positive": "#22c55e",
+    "negative": "#ef4444",
+    "neutral": "#94a3b8",
+    "primary": "#3b82f6",
+    "secondary": "#8b5cf6",
+    "accent": "#f59e0b",
 }
-CATEGORY_PALETTE = ["#3498db", "#e74c3c", "#2ecc71", "#f39c12", "#9b59b6", "#1abc9c", "#e67e22", "#34495e", "#16a085", "#c0392b", "#8e44ad", "#27ae60"]
-MODEL_PALETTE = ["#3498db", "#2ecc71", "#e74c3c", "#f39c12", "#9b59b6", "#1abc9c"]
+CATEGORY_PALETTE = ["#3b82f6", "#8b5cf6", "#22c55e", "#f59e0b", "#ec4899", "#06b6d4"]
+MODEL_PALETTE = ["#3b82f6", "#22c55e", "#ef4444", "#f59e0b", "#8b5cf6", "#06b6d4"]
+
+sns.set_theme(
+    style="whitegrid",
+    palette=CATEGORY_PALETTE,
+    font_scale=1.1,
+    rc={
+        "axes.facecolor": "#f8fafc",
+        "figure.facecolor": "white",
+        "grid.color": "#e2e8f0",
+        "axes.edgecolor": "#cbd5e1",
+        "text.color": "#334155",
+        "axes.labelcolor": "#475569",
+    },
+)
 
 
 def save_fig(fig, name, output_dir, dpi=150):
@@ -46,23 +59,23 @@ def save_fig(fig, name, output_dir, dpi=150):
 
 def plot_sentiment_distribution(df, output_dir):
     """Plot overall sentiment distribution charts."""
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5), facecolor="white")
     
     colors = [COLORS["positive"], COLORS["neutral"], COLORS["negative"]]
     label_order = ["positive", "neutral", "negative"]
     counts = df["sentiment_label"].value_counts().reindex(label_order).fillna(0)
     
-    axes[0].bar(counts.index, counts.values, color=colors, edgecolor="white", linewidth=1.5)
-    axes[0].set_title("Sentiment Distribution", fontsize=14, fontweight="bold")
+    axes[0].bar(counts.index, counts.values, color=colors, edgecolor="#e2e8f0", linewidth=1.5)
+    axes[0].set_title("Sentiment Distribution", fontsize=14, fontweight="bold", color="#1e293b")
     axes[0].set_ylabel("Number of Reviews")
     for i, v in enumerate(counts.values):
-        axes[0].text(i, v + max(counts.values) * 0.02, f"{int(v):,}", ha="center", fontweight="bold")
+        axes[0].text(i, v + max(counts.values) * 0.02, f"{int(v):,}", ha="center", fontweight="bold", fontsize=11)
     
     if "ensemble_score" in df.columns:
         axes[1].hist(df["ensemble_score"].dropna(), bins=60, color=COLORS["primary"],
-                     alpha=0.7, edgecolor="white")
-        axes[1].axvline(x=0, color="red", linestyle="--", alpha=0.7, label="Neutral")
-        axes[1].set_title("Ensemble Score Distribution", fontsize=14, fontweight="bold")
+                     alpha=0.75, edgecolor="#e2e8f0")
+        axes[1].axvline(x=0, color=COLORS["neutral"], linestyle="--", alpha=0.8, linewidth=2, label="Neutral")
+        axes[1].set_title("Ensemble Score Distribution", fontsize=14, fontweight="bold", color="#1e293b")
         axes[1].set_xlabel("Sentiment Score")
         axes[1].set_ylabel("Frequency")
         axes[1].legend()
@@ -72,8 +85,8 @@ def plot_sentiment_distribution(df, output_dir):
         bar_colors = [COLORS["negative"] if r <= 2 else COLORS["neutral"] if r == 3 else COLORS["positive"]
                       for r in rating_sentiment.index]
         axes[2].bar(rating_sentiment.index, rating_sentiment.values,
-                    color=bar_colors, edgecolor="white", linewidth=1.5)
-        axes[2].set_title("Avg Sentiment by Rating", fontsize=14, fontweight="bold")
+                    color=bar_colors, edgecolor="#e2e8f0", linewidth=1.5)
+        axes[2].set_title("Avg Sentiment by Rating", fontsize=14, fontweight="bold", color="#1e293b")
         axes[2].set_xlabel("Star Rating")
         axes[2].set_ylabel("Avg Sentiment Score")
     
@@ -87,17 +100,17 @@ def plot_category_comparison(cat_summary, output_dir):
     if cat_summary.empty:
         return None
     
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5), facecolor="white")
     
     if "avg_sentiment" in cat_summary.columns:
         cat_summary_sorted = cat_summary.sort_values("avg_sentiment", ascending=True)
         colors = [COLORS["positive"] if v > 0 else COLORS["negative"]
                   for v in cat_summary_sorted["avg_sentiment"]]
         axes[0].barh(cat_summary_sorted["category"], cat_summary_sorted["avg_sentiment"],
-                     color=colors, edgecolor="white")
-        axes[0].set_title("Avg Sentiment by Category", fontsize=14, fontweight="bold")
+                     color=colors, edgecolor="#e2e8f0")
+        axes[0].set_title("Avg Sentiment by Category", fontsize=14, fontweight="bold", color="#1e293b")
         axes[0].set_xlabel("Average Sentiment Score")
-        axes[0].axvline(x=0, color="gray", linestyle="--", alpha=0.5)
+        axes[0].axvline(x=0, color="#94a3b8", linestyle="--", alpha=0.6)
     
     if all(col in cat_summary.columns for col in ["positive_pct", "neutral_pct", "negative_pct"]):
         cat_stacked = cat_summary[["category", "positive_pct", "neutral_pct", "negative_pct"]]
@@ -111,11 +124,11 @@ def plot_category_comparison(cat_summary, output_dir):
     if all(col in cat_summary.columns for col in ["avg_rating", "avg_sentiment", "total_reviews"]):
         sizes = cat_summary["total_reviews"] / cat_summary["total_reviews"].max() * 500
         axes[2].scatter(cat_summary["avg_rating"], cat_summary["avg_sentiment"],
-                        s=sizes, c=CATEGORY_PALETTE[:len(cat_summary)], alpha=0.7, edgecolors="black")
+                        s=sizes, c=CATEGORY_PALETTE[:len(cat_summary)], alpha=0.7, edgecolors="#64748b", linewidth=1)
         for _, row in cat_summary.iterrows():
             axes[2].annotate(row["category"], (row["avg_rating"], row["avg_sentiment"]),
                              fontsize=9, ha="center", va="bottom")
-        axes[2].set_title("Rating vs Sentiment (size = volume)", fontsize=14, fontweight="bold")
+        axes[2].set_title("Rating vs Sentiment (size = volume)", fontsize=14, fontweight="bold", color="#1e293b")
         axes[2].set_xlabel("Average Rating")
         axes[2].set_ylabel("Average Sentiment")
     
@@ -130,25 +143,25 @@ def plot_aspect_analysis(aspect_df, output_dir):
     
     top_aspects = aspect_df.head(15).copy()
     
-    fig, axes = plt.subplots(1, 2, figsize=(16, 7))
+    fig, axes = plt.subplots(1, 2, figsize=(16, 7), facecolor="white")
     
     top_aspects_sorted = top_aspects.sort_values("mention_count")
     if "avg_sentiment" in top_aspects_sorted.columns:
-        colors = ["#2ecc71" if v > 0 else "#e74c3c" for v in top_aspects_sorted["avg_sentiment"]]
+        colors = [COLORS["positive"] if v > 0 else COLORS["negative"] for v in top_aspects_sorted["avg_sentiment"]]
     else:
-        colors = ["#3498db"] * len(top_aspects_sorted)
+        colors = [COLORS["primary"]] * len(top_aspects_sorted)
     
-    axes[0].barh(top_aspects_sorted["aspect"], top_aspects_sorted["mention_count"], color=colors)
+    axes[0].barh(top_aspects_sorted["aspect"], top_aspects_sorted["mention_count"], color=colors, edgecolor="#e2e8f0")
     axes[0].set_title("Most Discussed Aspects\n(Green = Positive, Red = Negative)",
-                       fontsize=13, fontweight="bold")
+                       fontsize=13, fontweight="bold", color="#1e293b")
     axes[0].set_xlabel("Mention Count")
     
     if all(col in top_aspects.columns for col in ["positive_pct", "neutral_pct", "negative_pct"]):
         aspects_pivot = top_aspects[["aspect", "positive_pct", "neutral_pct", "negative_pct"]].set_index("aspect")
         aspects_pivot = aspects_pivot.sort_values("positive_pct")
         aspects_pivot.plot(kind="barh", stacked=True, ax=axes[1],
-                           color=[COLORS["positive"], COLORS["neutral"], COLORS["negative"]])
-        axes[1].set_title("Sentiment Breakdown per Aspect", fontsize=13, fontweight="bold")
+                           color=[COLORS["positive"], COLORS["neutral"], COLORS["negative"]], edgecolor="#e2e8f0")
+        axes[1].set_title("Sentiment Breakdown per Aspect", fontsize=13, fontweight="bold", color="#1e293b")
         axes[1].set_xlabel("Percentage (%)")
         axes[1].legend(["Positive", "Neutral", "Negative"], loc="lower right")
     
@@ -176,8 +189,12 @@ def plot_temporal_trends(temporal_df, output_dir):
     fig.update_layout(
         xaxis_tickangle=-45,
         template="plotly_white",
-        font=dict(size=12),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        font=dict(size=12, family="Inter, system-ui, sans-serif", color="#334155"),
+        paper_bgcolor="white",
+        plot_bgcolor="#f8fafc",
+        xaxis=dict(showgrid=True, gridcolor="#e2e8f0"),
+        yaxis=dict(showgrid=True, gridcolor="#e2e8f0"),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, bgcolor="rgba(255,255,255,0.8)"),
         height=500,
     )
     output_path = Path(output_dir) / "temporal_trends.html"
@@ -190,7 +207,7 @@ def plot_brand_heatmap(brand_df, output_dir):
     if brand_df.empty or "brand" not in brand_df.columns:
         return None
     
-    fig, axes = plt.subplots(1, 2, figsize=(18, 8))
+    fig, axes = plt.subplots(1, 2, figsize=(18, 8), facecolor="white")
     
     if "avg_sentiment" in brand_df.columns and "category" in brand_df.columns:
         pivot_sentiment = brand_df.pivot_table(
@@ -199,8 +216,8 @@ def plot_brand_heatmap(brand_df, output_dir):
         pivot_sentiment = pivot_sentiment.dropna(how="all")
         if not pivot_sentiment.empty:
             sns.heatmap(pivot_sentiment, annot=True, fmt=".3f", cmap="RdYlGn", center=0,
-                        ax=axes[0], linewidths=0.5)
-            axes[0].set_title("Average Sentiment by Brand & Category", fontsize=14, fontweight="bold")
+                        ax=axes[0], linewidths=0.5, linecolor="#e2e8f0")
+            axes[0].set_title("Average Sentiment by Brand & Category", fontsize=14, fontweight="bold", color="#1e293b")
     
     if "avg_rating" in brand_df.columns and "category" in brand_df.columns:
         pivot_rating = brand_df.pivot_table(
@@ -209,8 +226,8 @@ def plot_brand_heatmap(brand_df, output_dir):
         pivot_rating = pivot_rating.dropna(how="all")
         if not pivot_rating.empty:
             sns.heatmap(pivot_rating, annot=True, fmt=".2f", cmap="YlOrRd", ax=axes[1],
-                        linewidths=0.5, vmin=1, vmax=5)
-            axes[1].set_title("Average Rating by Brand & Category", fontsize=14, fontweight="bold")
+                        linewidths=0.5, linecolor="#e2e8f0", vmin=1, vmax=5)
+            axes[1].set_title("Average Rating by Brand & Category", fontsize=14, fontweight="bold", color="#1e293b")
     
     fig.tight_layout()
     return save_fig(fig, "brand_heatmap", output_dir)
@@ -218,7 +235,7 @@ def plot_brand_heatmap(brand_df, output_dir):
 
 def plot_wordclouds(df, output_dir, text_column="review_text"):
     """Generate word clouds for positive and negative reviews."""
-    fig, axes = plt.subplots(1, 2, figsize=(18, 7))
+    fig, axes = plt.subplots(1, 2, figsize=(18, 7), facecolor="white")
     
     if "sentiment_label" not in df.columns:
         return None
@@ -231,41 +248,43 @@ def plot_wordclouds(df, output_dir, text_column="review_text"):
     
     if pos_text.strip():
         wc_pos = WordCloud(
-            width=800, height=400, background_color="white",
+            width=800, height=400, background_color="#fafafa",
             colormap="Greens", max_words=100, collocations=False,
+            min_font_size=10, max_font_size=120,
         ).generate(pos_text)
         axes[0].imshow(wc_pos, interpolation="bilinear")
-        axes[0].set_title("Positive Reviews - Key Words", fontsize=14, fontweight="bold")
+        axes[0].set_title("Positive Reviews — Key Words", fontsize=14, fontweight="bold", color="#1e293b")
         axes[0].axis("off")
     
     if neg_text.strip():
         wc_neg = WordCloud(
-            width=800, height=400, background_color="white",
+            width=800, height=400, background_color="#fafafa",
             colormap="Reds", max_words=100, collocations=False,
+            min_font_size=10, max_font_size=120,
         ).generate(neg_text)
         axes[1].imshow(wc_neg, interpolation="bilinear")
-        axes[1].set_title("Negative Reviews - Key Words", fontsize=14, fontweight="bold")
+        axes[1].set_title("Negative Reviews — Key Words", fontsize=14, fontweight="bold", color="#1e293b")
         axes[1].axis("off")
     
-    fig.suptitle("Word Clouds: Positive vs Negative Sentiment", fontsize=16, fontweight="bold")
+    fig.suptitle("Word Clouds: Positive vs Negative Sentiment", fontsize=16, fontweight="bold", color="#1e293b")
     fig.tight_layout()
     return save_fig(fig, "wordclouds", output_dir)
 
 
 def plot_drivers(positive_drivers, negative_drivers, output_dir):
     """Plot sentiment driver analysis."""
-    fig, axes = plt.subplots(1, 2, figsize=(16, 7))
+    fig, axes = plt.subplots(1, 2, figsize=(16, 7), facecolor="white")
     
     if not positive_drivers.empty:
         top_pos = positive_drivers.head(15).sort_values("tfidf_score")
-        axes[0].barh(top_pos["phrase"], top_pos["tfidf_score"], color=COLORS["positive"])
-        axes[0].set_title("Top Positive Sentiment Drivers", fontsize=14, fontweight="bold")
+        axes[0].barh(top_pos["phrase"], top_pos["tfidf_score"], color=COLORS["positive"], edgecolor="#e2e8f0")
+        axes[0].set_title("Top Positive Sentiment Drivers", fontsize=14, fontweight="bold", color="#1e293b")
         axes[0].set_xlabel("TF-IDF Importance Score")
     
     if not negative_drivers.empty:
         top_neg = negative_drivers.head(15).sort_values("tfidf_score")
-        axes[1].barh(top_neg["phrase"], top_neg["tfidf_score"], color=COLORS["negative"])
-        axes[1].set_title("Top Negative Sentiment Drivers", fontsize=14, fontweight="bold")
+        axes[1].barh(top_neg["phrase"], top_neg["tfidf_score"], color=COLORS["negative"], edgecolor="#e2e8f0")
+        axes[1].set_title("Top Negative Sentiment Drivers", fontsize=14, fontweight="bold", color="#1e293b")
         axes[1].set_xlabel("TF-IDF Importance Score")
     
     fig.tight_layout()
@@ -288,7 +307,7 @@ def plot_rating_vs_sentiment_scatter(df, output_dir):
         y="textblob_polarity",
         color=color_col,
         symbol=symbol_col,
-        opacity=0.5,
+        opacity=0.6,
         title="VADER vs TextBlob Sentiment Scores",
         labels={"vader_compound": "VADER Compound Score", "textblob_polarity": "TextBlob Polarity"},
         color_discrete_map=COLORS if color_col else None,
@@ -297,7 +316,12 @@ def plot_rating_vs_sentiment_scatter(df, output_dir):
     fig.update_layout(
         template="plotly_white",
         height=600,
-        font=dict(size=12),
+        font=dict(size=12, family="Inter, system-ui, sans-serif", color="#334155"),
+        paper_bgcolor="white",
+        plot_bgcolor="#f8fafc",
+        xaxis=dict(showgrid=True, gridcolor="#e2e8f0"),
+        yaxis=dict(showgrid=True, gridcolor="#e2e8f0"),
+        legend=dict(bgcolor="rgba(255,255,255,0.8)", bordercolor="#e2e8f0"),
     )
     output_path = Path(output_dir) / "vader_vs_textblob.html"
     fig.write_html(str(output_path))
@@ -306,7 +330,7 @@ def plot_rating_vs_sentiment_scatter(df, output_dir):
 
 def plot_confusion_matrix(conf_matrix, labels, model_name, output_dir):
     """Plot confusion matrix heatmap for a model."""
-    fig, ax = plt.subplots(figsize=(8, 6))
+    fig, ax = plt.subplots(figsize=(8, 6), facecolor="white")
     
     sns.heatmap(
         conf_matrix,
@@ -317,9 +341,11 @@ def plot_confusion_matrix(conf_matrix, labels, model_name, output_dir):
         yticklabels=labels,
         ax=ax,
         cbar_kws={"label": "Count"},
+        linewidths=0.5,
+        linecolor="#e2e8f0",
     )
     
-    ax.set_title(f"Confusion Matrix: {model_name}", fontsize=14, fontweight="bold")
+    ax.set_title(f"Confusion Matrix: {model_name}", fontsize=14, fontweight="bold", color="#1e293b")
     ax.set_xlabel("Predicted Label")
     ax.set_ylabel("True Label")
     
@@ -377,7 +403,7 @@ def plot_model_comparison(evaluation_results, output_dir):
         
         axes[0].set_xlabel("Model")
         axes[0].set_ylabel("Score")
-        axes[0].set_title("Model Performance Comparison", fontsize=14, fontweight="bold")
+        axes[0].set_title("Model Performance Comparison", fontsize=14, fontweight="bold", color="#1e293b")
         axes[0].set_xticks(x)
         axes[0].set_xticklabels(comparison_df["Model"], rotation=45, ha="right")
         axes[0].legend()
@@ -387,11 +413,11 @@ def plot_model_comparison(evaluation_results, output_dir):
         for i, (_, row) in enumerate(comparison_df.iterrows()):
             axes[1].scatter(row["Recall"], row["Precision"], 
                            s=200, c=[MODEL_PALETTE[i % len(MODEL_PALETTE)]],
-                           label=row["Model"], edgecolors="black", linewidth=1.5)
+                           label=row["Model"], edgecolors="#64748b", linewidth=1.5)
         
         axes[1].set_xlabel("Recall")
         axes[1].set_ylabel("Precision")
-        axes[1].set_title("Precision vs Recall", fontsize=14, fontweight="bold")
+        axes[1].set_title("Precision vs Recall", fontsize=14, fontweight="bold", color="#1e293b")
         axes[1].legend(loc="best")
         axes[1].set_xlim(0, 1.05)
         axes[1].set_ylim(0, 1.05)
@@ -428,7 +454,7 @@ def plot_per_class_f1(evaluation_results, output_dir):
     
     df = pd.DataFrame(data)
     
-    fig, ax = plt.subplots(figsize=(12, 6))
+    fig, ax = plt.subplots(figsize=(12, 6), facecolor="white")
     
     classes = df["Class"].unique()
     models = df["Model"].unique()
@@ -440,11 +466,11 @@ def plot_per_class_f1(evaluation_results, output_dir):
         f1_scores = [model_data[model_data["Class"] == c]["F1"].values[0] 
                      if c in model_data["Class"].values else 0 for c in classes]
         offset = (i - len(models) / 2 + 0.5) * width
-        ax.bar(x + offset, f1_scores, width, label=model, color=MODEL_PALETTE[i % len(MODEL_PALETTE)])
+        ax.bar(x + offset, f1_scores, width, label=model, color=MODEL_PALETTE[i % len(MODEL_PALETTE)], edgecolor="#e2e8f0")
     
     ax.set_xlabel("Sentiment Class")
     ax.set_ylabel("F1 Score")
-    ax.set_title("Per-Class F1 Scores by Model", fontsize=14, fontweight="bold")
+    ax.set_title("Per-Class F1 Scores by Model", fontsize=14, fontweight="bold", color="#1e293b")
     ax.set_xticks(x)
     ax.set_xticklabels(classes)
     ax.legend(loc="upper right")
@@ -459,25 +485,25 @@ def plot_ground_truth_distribution(df, output_dir, label_column="ground_truth"):
     if label_column not in df.columns:
         return None
     
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5), facecolor="white")
     
     label_order = ["positive", "neutral", "negative"]
     counts = df[label_column].value_counts().reindex(label_order).fillna(0)
     colors = [COLORS["positive"], COLORS["neutral"], COLORS["negative"]]
     
-    axes[0].bar(counts.index, counts.values, color=colors, edgecolor="white")
-    axes[0].set_title("Ground Truth Distribution", fontsize=14, fontweight="bold")
+    axes[0].bar(counts.index, counts.values, color=colors, edgecolor="#e2e8f0")
+    axes[0].set_title("Ground Truth Distribution", fontsize=14, fontweight="bold", color="#1e293b")
     axes[0].set_ylabel("Count")
     for i, v in enumerate(counts.values):
-        axes[0].text(i, v + max(counts.values) * 0.02, f"{int(v):,}", ha="center", fontweight="bold")
+        axes[0].text(i, v + max(counts.values) * 0.02, f"{int(v):,}", ha="center", fontweight="bold", fontsize=11)
     
     if "rating" in df.columns:
         rating_counts = df["rating"].value_counts().sort_index()
         rating_colors = [COLORS["negative"], COLORS["negative"], COLORS["neutral"],
                          COLORS["positive"], COLORS["positive"]]
         axes[1].bar(rating_counts.index, rating_counts.values, 
-                   color=rating_colors[:len(rating_counts)], edgecolor="white")
-        axes[1].set_title("Rating Distribution (Source of Ground Truth)", fontsize=14, fontweight="bold")
+                   color=rating_colors[:len(rating_counts)], edgecolor="#e2e8f0")
+        axes[1].set_title("Rating Distribution (Source of Ground Truth)", fontsize=14, fontweight="bold", color="#1e293b")
         axes[1].set_xlabel("Star Rating")
         axes[1].set_ylabel("Count")
     
