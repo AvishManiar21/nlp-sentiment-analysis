@@ -1,8 +1,7 @@
 [theme]
-primaryColor = "#3498db"
-backgroundColor = "#ffffff"
-secondaryBackgroundColor = "#f0f2f6"
-textColor = "#262730"
+# Using custom CSS for theme management - keeping minimal defaults
+primaryColor = "#3b82f6"
+font = "sans serif"
 
 [server]
 maxUploadSize = 50

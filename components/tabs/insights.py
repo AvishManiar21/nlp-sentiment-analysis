@@ -2,7 +2,7 @@
 
 import streamlit as st
 import pandas as pd
-from utils.theme import get_sentiment_colors
+from utils.theme import get_sentiment_colors, get_theme_tokens
 
 
 def _calculate_insights(df: pd.DataFrame) -> dict:
@@ -119,14 +119,14 @@ def _calculate_insights(df: pd.DataFrame) -> dict:
 
 
 def _render_alert_card(alert: dict):
-    """Render an alert card."""
-    colors = get_sentiment_colors()
+    """Render an alert card using theme-aware colors."""
+    tokens = get_theme_tokens()
     
     type_colors = {
-        "danger": colors["negative"],
-        "warning": "#f59e0b",
-        "success": colors["positive"],
-        "info": "#3b82f6",
+        "danger": tokens["negative"],
+        "warning": tokens["warning"],
+        "success": tokens["positive"],
+        "info": tokens["info"],
     }
     
     type_icons = {
@@ -136,19 +136,19 @@ def _render_alert_card(alert: dict):
         "info": "🔵",
     }
     
-    color = type_colors.get(alert["type"], "#3b82f6")
+    color = type_colors.get(alert["type"], tokens["info"])
     icon = type_icons.get(alert["type"], "ℹ️")
     
     st.markdown(f"""
-    <div style="
-        background-color: {color}10;
+    <div class="alert-card alert-card-{alert['type']}" style="
+        background-color: {color}15;
         border-left: 4px solid {color};
-        padding: 1rem;
-        margin: 0.5rem 0;
+        padding: 1rem 1.25rem;
+        margin: 0.75rem 0;
         border-radius: 0 0.5rem 0.5rem 0;
     ">
-        <strong>{icon} {alert['title']}</strong><br>
-        <span style="color: #666;">{alert['message']}</span>
+        <strong style="color: {tokens['text_primary']};">{icon} {alert['title']}</strong><br>
+        <span style="color: {tokens['text_secondary']};">{alert['message']}</span>
     </div>
     """, unsafe_allow_html=True)
 

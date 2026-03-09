@@ -4,7 +4,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from utils.theme import apply_chart_theme, get_sentiment_colors
+from utils.theme import apply_chart_theme, get_sentiment_colors, get_theme_tokens, is_dark_mode
 
 try:
     from wordcloud import WordCloud
@@ -93,12 +93,18 @@ def render_aspect_analysis(df: pd.DataFrame):
 
 
 def render_wordclouds(df: pd.DataFrame):
-    """Render word clouds for positive and negative reviews."""
+    """Render word clouds for positive and negative reviews with theme-aware styling."""
     if not WORDCLOUD_AVAILABLE:
         st.info("WordCloud library not available. Install with: pip install wordcloud")
         return
     
     st.subheader("Word Clouds")
+    
+    tokens = get_theme_tokens()
+    dark = is_dark_mode()
+    
+    bg_color = tokens["bg_secondary"]
+    text_color = tokens["text_primary"]
     
     text_col = "review_text" if "review_text" in df.columns else "cleaned_text"
     
@@ -109,7 +115,7 @@ def render_wordclouds(df: pd.DataFrame):
         wc = WordCloud(
             width=800,
             height=380,
-            background_color="#fafafa",
+            background_color=bg_color,
             colormap=colormap,
             max_words=100,
             collocations=False,
@@ -119,8 +125,9 @@ def render_wordclouds(df: pd.DataFrame):
         fig, ax = plt.subplots(figsize=(8, 4))
         ax.imshow(wc, interpolation="bilinear")
         ax.axis("off")
-        ax.set_title(title, fontsize=14, fontweight="bold", pad=10)
-        fig.patch.set_facecolor("white")
+        ax.set_title(title, fontsize=14, fontweight="bold", pad=10, color=text_color)
+        fig.patch.set_facecolor(bg_color)
+        ax.set_facecolor(bg_color)
         st.pyplot(fig)
         plt.close(fig)
     

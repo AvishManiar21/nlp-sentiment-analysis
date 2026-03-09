@@ -2,7 +2,7 @@
 
 import streamlit as st
 import pandas as pd
-from utils.theme import toggle_theme, get_current_theme
+from utils.theme import toggle_theme, is_dark_mode, get_theme_tokens
 from utils.export import render_export_section
 
 BRAND_EXCLUDE_PATTERNS = [
@@ -59,14 +59,24 @@ def _get_filter_brands(df, top_n=BRAND_TOP_N):
 
 
 def render_theme_toggle():
-    """Render theme toggle in sidebar."""
-    current_theme = get_current_theme()
-    theme_icon = "🌙" if current_theme == "light" else "☀️"
-    theme_label = "Dark Mode" if current_theme == "light" else "Light Mode"
+    """Render theme toggle in sidebar with clean state management."""
+    dark = is_dark_mode()
+    tokens = get_theme_tokens()
     
-    if st.sidebar.button(f"{theme_icon} {theme_label}", use_container_width=True):
-        toggle_theme()
-        st.rerun()
+    col1, col2 = st.sidebar.columns([1, 3])
+    
+    with col1:
+        st.sidebar.write("☀️" if not dark else "🌙")
+    
+    with col2:
+        theme_label = "Dark Mode" if not dark else "Light Mode"
+        if st.sidebar.button(
+            f"Switch to {theme_label}",
+            use_container_width=True,
+            key="theme_toggle_btn"
+        ):
+            toggle_theme()
+            st.rerun()
 
 
 def render_sidebar(df: pd.DataFrame) -> pd.DataFrame:
