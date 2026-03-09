@@ -26,7 +26,7 @@ A production-ready sentiment analysis platform using **real Amazon product revie
 
 ### Dashboard Features
 - **8 Interactive Tabs**: Overview, Business Insights, Compare, Categories, Aspects, Trends, Model Performance, Deep Dive
-- **Dark Mode Support**: Toggle between light and dark themes
+- **Polished Custom Theme**: Consistent, semantic light theme for all charts and components
 - **Export Functionality**: Download filtered data as CSV or Excel
 - **Real-time Filtering**: Category, brand, sentiment, rating, and date filters
 
@@ -239,7 +239,9 @@ cp .env.example .env
 ```
 
 Key settings:
-- `CLOUD_SAMPLE_SIZE`: Number of reviews (default: 30000)
+- `CLOUD_SAMPLE_SIZE`: Number of reviews to process when generating the dataset (default: 30000)
+- `CLOUD_MODE`: Set to `true` on Streamlit Cloud to enable lighter, Cloud-optimized defaults
+- `CLOUD_DISPLAY_SAMPLE_SIZE`: Maximum number of reviews loaded into the dashboard when `CLOUD_MODE=true` (default: 20000)
 - `LOG_LEVEL`: Logging level (DEBUG, INFO, WARNING, ERROR)
 - `API_AUTH_ENABLED`: Enable API authentication
 

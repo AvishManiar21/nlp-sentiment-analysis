@@ -4,7 +4,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from utils.theme import apply_chart_theme, get_sentiment_colors, CATEGORY_PALETTE
+from utils.theme import apply_chart_theme, get_sentiment_colors, CATEGORY_PALETTE, get_theme_tokens
 
 
 def render_comparison_radar(items_data: list, labels: list):
@@ -44,14 +44,24 @@ def render_comparison_radar(items_data: list, labels: list):
             opacity=0.7,
         ))
     
+    tokens = get_theme_tokens()
     fig.update_layout(
         polar=dict(
-            radialaxis=dict(visible=True, range=[0, 5])
+            radialaxis=dict(
+                visible=True,
+                range=[0, 5],
+                tickfont=dict(color=tokens["text_muted"]),
+                gridcolor=tokens["chart_grid"],
+            ),
+            angularaxis=dict(
+                tickfont=dict(color=tokens["text_secondary"]),
+                gridcolor=tokens["chart_grid"],
+            ),
+            bgcolor=tokens["chart_bg"],
         ),
         showlegend=True,
-        title="Multi-dimensional Comparison",
     )
-    apply_chart_theme(fig, height=450)
+    apply_chart_theme(fig, height=450, title="Multi-dimensional Comparison")
     
     return fig
 

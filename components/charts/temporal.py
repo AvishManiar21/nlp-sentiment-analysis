@@ -1,10 +1,15 @@
 """Temporal analysis chart components."""
 
+import os
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from utils.theme import apply_chart_theme, get_sentiment_colors, CATEGORY_PALETTE
+
+
+IS_CLOUD_MODE = os.getenv("CLOUD_MODE", "").lower() == "true"
 
 
 def render_temporal_trends(df: pd.DataFrame):
@@ -56,7 +61,8 @@ def render_vader_vs_textblob(df: pd.DataFrame):
     
     colors = get_sentiment_colors()
     
-    sample = df.sample(min(3000, len(df)), random_state=42)
+    max_points = 1500 if IS_CLOUD_MODE else 3000
+    sample = df.sample(min(max_points, len(df)), random_state=42)
     hover_cols = ["rating", "category"] if "category" in sample.columns else ["rating"]
     
     fig = px.scatter(

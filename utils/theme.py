@@ -80,25 +80,36 @@ MODEL_PALETTE = ["#3b82f6", "#10b981", "#ef4444", "#f59e0b", "#8b5cf6", "#06b6d4
 
 
 def get_current_theme() -> str:
-    """Get current theme from session state. Returns 'light' or 'dark'."""
-    if "dark_mode" not in st.session_state:
-        st.session_state.dark_mode = False
-    return "dark" if st.session_state.dark_mode else "light"
+    """
+    Get current theme name.
+
+    Dark mode has been removed from the app, so we always return 'light'.
+    """
+    return "light"
 
 
 def is_dark_mode() -> bool:
-    """Check if dark mode is currently active."""
-    return get_current_theme() == "dark"
+    """
+    Check if dark mode is currently active.
+
+    Dark mode support has been removed, so this always returns False.
+    """
+    return False
 
 
 def toggle_theme():
-    """Toggle between light and dark theme."""
-    st.session_state.dark_mode = not st.session_state.get("dark_mode", False)
+    """
+    Toggle between light and dark theme.
+
+    Kept for backwards compatibility, but now a no-op since the app
+    is locked to the light theme.
+    """
+    return None
 
 
 def get_theme_tokens() -> dict:
-    """Get the current theme's color tokens."""
-    return THEME_DARK if is_dark_mode() else THEME_LIGHT
+    """Get the current theme's color tokens (light theme only)."""
+    return THEME_LIGHT
 
 
 def get_sentiment_colors() -> dict:
@@ -186,12 +197,83 @@ def inject_custom_css():
     
     css = f"""
     <style>
-        /* Base app styling */
+        /* ===== BASE APP STYLING ===== */
         .stApp {{
             background-color: {tokens["bg_primary"]};
         }}
         
-        /* Metric cards */
+        /* ===== TYPOGRAPHY - COMPREHENSIVE COVERAGE ===== */
+        /* All headings - both direct and inside markdown containers */
+        h1, h2, h3, h4, h5, h6,
+        .stMarkdown h1, .stMarkdown h2, .stMarkdown h3,
+        .stMarkdown h4, .stMarkdown h5, .stMarkdown h6,
+        [data-testid="stMarkdownContainer"] h1,
+        [data-testid="stMarkdownContainer"] h2,
+        [data-testid="stMarkdownContainer"] h3,
+        [data-testid="stMarkdownContainer"] h4,
+        [data-testid="stMarkdownContainer"] h5,
+        [data-testid="stMarkdownContainer"] h6 {{
+            color: {tokens["text_primary"]} !important;
+        }}
+        
+        /* Subheaders rendered by st.subheader */
+        .stSubheader, [data-testid="stSubheader"] {{
+            color: {tokens["text_primary"]} !important;
+        }}
+        
+        /* Paragraphs, lists, and general text */
+        p, li,
+        .stMarkdown p, .stMarkdown li,
+        [data-testid="stMarkdownContainer"] p,
+        [data-testid="stMarkdownContainer"] li {{
+            color: {tokens["text_secondary"]} !important;
+        }}
+        
+        /* Span elements (used in many Streamlit components) */
+        span {{
+            color: inherit;
+        }}
+        
+        /* Bold text - ensure it uses primary color for emphasis */
+        strong, b,
+        .stMarkdown strong, .stMarkdown b,
+        [data-testid="stMarkdownContainer"] strong,
+        [data-testid="stMarkdownContainer"] b {{
+            color: {tokens["text_primary"]} !important;
+        }}
+        
+        /* Caption/small text */
+        .stCaption, [data-testid="stCaption"],
+        small, .stMarkdown small,
+        figcaption {{
+            color: {tokens["text_muted"]} !important;
+        }}
+        
+        /* Code blocks and inline code */
+        code, pre,
+        .stMarkdown code, .stMarkdown pre,
+        [data-testid="stMarkdownContainer"] code {{
+            background-color: {tokens["bg_muted"]} !important;
+            color: {tokens["text_primary"]} !important;
+        }}
+        
+        /* Blockquotes */
+        blockquote,
+        .stMarkdown blockquote {{
+            border-left-color: {tokens["border_default"]} !important;
+            color: {tokens["text_secondary"]} !important;
+        }}
+        
+        /* Links */
+        a, .stMarkdown a {{
+            color: {tokens["accent_primary"]} !important;
+        }}
+        
+        a:hover, .stMarkdown a:hover {{
+            color: {tokens["accent_secondary"]} !important;
+        }}
+        
+        /* ===== METRIC CARDS ===== */
         [data-testid="stMetric"] {{
             background-color: {tokens["bg_secondary"]};
             padding: 1rem;
@@ -207,36 +289,39 @@ def inject_custom_css():
             color: {tokens["text_primary"]} !important;
         }}
         
-        /* Sidebar styling */
+        [data-testid="stMetricDelta"] {{
+            opacity: 0.9;
+        }}
+        
+        /* ===== SIDEBAR ===== */
         [data-testid="stSidebar"] {{
             background-color: {tokens["bg_secondary"]};
         }}
         
+        [data-testid="stSidebar"] label,
         [data-testid="stSidebar"] .stSelectbox label,
         [data-testid="stSidebar"] .stSlider label,
-        [data-testid="stSidebar"] .stDateInput label {{
+        [data-testid="stSidebar"] .stDateInput label,
+        [data-testid="stSidebar"] .stRadio label {{
             color: {tokens["text_secondary"]} !important;
         }}
         
-        /* Headers */
-        h1, h2, h3, h4, h5, h6 {{
-            color: {tokens["text_primary"]} !important;
+        [data-testid="stSidebar"] p,
+        [data-testid="stSidebar"] span {{
+            color: {tokens["text_secondary"]} !important;
         }}
         
-        /* Paragraphs and text */
-        p, span, li {{
-            color: {tokens["text_secondary"]};
-        }}
-        
-        /* Tabs */
+        /* ===== TABS ===== */
         .stTabs [data-baseweb="tab-list"] {{
             background-color: {tokens["bg_secondary"]};
             border-radius: 0.5rem;
             padding: 0.25rem;
+            gap: 0.25rem;
         }}
         
         .stTabs [data-baseweb="tab"] {{
-            color: {tokens["text_secondary"]};
+            color: {tokens["text_secondary"]} !important;
+            background-color: transparent;
         }}
         
         .stTabs [aria-selected="true"] {{
@@ -245,24 +330,36 @@ def inject_custom_css():
             border-radius: 0.375rem;
         }}
         
-        /* Expanders */
-        .streamlit-expanderHeader {{
-            background-color: {tokens["bg_secondary"]};
+        /* Tab panel content */
+        .stTabs [data-baseweb="tab-panel"] {{
+            color: {tokens["text_secondary"]};
+        }}
+        
+        /* ===== EXPANDERS ===== */
+        .streamlit-expanderHeader,
+        [data-testid="stExpander"] summary {{
+            background-color: {tokens["bg_secondary"]} !important;
             color: {tokens["text_primary"]} !important;
             border-radius: 0.5rem;
         }}
         
-        .streamlit-expanderContent {{
+        .streamlit-expanderContent,
+        [data-testid="stExpander"] > div {{
             background-color: {tokens["bg_muted"]};
             border: 1px solid {tokens["border_default"]};
             border-top: none;
             border-radius: 0 0 0.5rem 0.5rem;
         }}
         
-        /* Buttons */
+        [data-testid="stExpander"] p,
+        [data-testid="stExpander"] span {{
+            color: {tokens["text_secondary"]} !important;
+        }}
+        
+        /* ===== BUTTONS ===== */
         .stButton > button {{
             background-color: {tokens["accent_primary"]};
-            color: {tokens["text_inverse"]};
+            color: {tokens["text_inverse"]} !important;
             border: none;
             border-radius: 0.5rem;
             transition: all 0.2s ease;
@@ -273,10 +370,9 @@ def inject_custom_css():
             transform: translateY(-1px);
         }}
         
-        /* Download buttons */
         .stDownloadButton > button {{
             background-color: {tokens["bg_secondary"]};
-            color: {tokens["text_primary"]};
+            color: {tokens["text_primary"]} !important;
             border: 1px solid {tokens["border_default"]};
         }}
         
@@ -285,21 +381,41 @@ def inject_custom_css():
             border-color: {tokens["accent_primary"]};
         }}
         
-        /* Data frames */
+        /* ===== DATA FRAMES & TABLES ===== */
         .stDataFrame {{
             background-color: {tokens["bg_secondary"]};
             border-radius: 0.5rem;
         }}
         
-        /* Dividers */
-        hr {{
-            border-color: {tokens["border_default"]};
+        .stDataFrame [data-testid="stDataFrameResizable"],
+        .stDataFrame table {{
+            color: {tokens["text_primary"]} !important;
         }}
         
-        /* Sentiment badges */
+        .stDataFrame th {{
+            background-color: {tokens["bg_muted"]} !important;
+            color: {tokens["text_primary"]} !important;
+        }}
+        
+        .stDataFrame td {{
+            color: {tokens["text_secondary"]} !important;
+        }}
+        
+        /* Pandas Styler rendered tables */
+        .dataframe, .dataframe th, .dataframe td {{
+            color: {tokens["text_primary"]} !important;
+            border-color: {tokens["border_default"]} !important;
+        }}
+        
+        /* ===== DIVIDERS ===== */
+        hr, [data-testid="stDivider"] {{
+            border-color: {tokens["border_default"]} !important;
+        }}
+        
+        /* ===== SENTIMENT BADGES ===== */
         .sentiment-positive {{
             background-color: {tokens["positive"]}20;
-            color: {tokens["positive"]};
+            color: {tokens["positive"]} !important;
             padding: 0.25rem 0.75rem;
             border-radius: 1rem;
             font-weight: 600;
@@ -308,7 +424,7 @@ def inject_custom_css():
         
         .sentiment-negative {{
             background-color: {tokens["negative"]}20;
-            color: {tokens["negative"]};
+            color: {tokens["negative"]} !important;
             padding: 0.25rem 0.75rem;
             border-radius: 1rem;
             font-weight: 600;
@@ -317,14 +433,14 @@ def inject_custom_css():
         
         .sentiment-neutral {{
             background-color: {tokens["neutral"]}20;
-            color: {tokens["neutral"]};
+            color: {tokens["neutral"]} !important;
             padding: 0.25rem 0.75rem;
             border-radius: 1rem;
             font-weight: 600;
             font-size: 0.875rem;
         }}
         
-        /* Alert cards */
+        /* ===== ALERT CARDS ===== */
         .alert-card {{
             background-color: {tokens["bg_secondary"]};
             border-left: 4px solid {tokens["info"]};
@@ -335,11 +451,11 @@ def inject_custom_css():
         }}
         
         .alert-card strong {{
-            color: {tokens["text_primary"]};
+            color: {tokens["text_primary"]} !important;
         }}
         
         .alert-card span {{
-            color: {tokens["text_secondary"]};
+            color: {tokens["text_secondary"]} !important;
         }}
         
         .alert-card-success {{
@@ -357,11 +473,27 @@ def inject_custom_css():
             background-color: {tokens["negative"]}10;
         }}
         
-        /* Info boxes */
-        .stAlert {{
-            background-color: {tokens["bg_secondary"]};
-            color: {tokens["text_primary"]};
+        /* ===== STREAMLIT ALERTS (st.info, st.success, etc.) ===== */
+        .stAlert, [data-testid="stAlert"] {{
+            background-color: {tokens["bg_secondary"]} !important;
+            color: {tokens["text_primary"]} !important;
             border-radius: 0.5rem;
+        }}
+        
+        .stAlert p, [data-testid="stAlert"] p {{
+            color: {tokens["text_primary"]} !important;
+        }}
+        
+        /* ===== FORM INPUTS ===== */
+        /* Text inputs */
+        .stTextInput input, .stTextArea textarea {{
+            background-color: {tokens["bg_secondary"]} !important;
+            color: {tokens["text_primary"]} !important;
+            border-color: {tokens["border_default"]} !important;
+        }}
+        
+        .stTextInput label, .stTextArea label {{
+            color: {tokens["text_secondary"]} !important;
         }}
         
         /* Select boxes */
@@ -370,44 +502,69 @@ def inject_custom_css():
         }}
         
         .stSelectbox [data-baseweb="select"] > div {{
-            background-color: {tokens["bg_secondary"]};
-            border-color: {tokens["border_default"]};
-            color: {tokens["text_primary"]};
+            background-color: {tokens["bg_secondary"]} !important;
+            border-color: {tokens["border_default"]} !important;
+            color: {tokens["text_primary"]} !important;
+        }}
+        
+        .stSelectbox label {{
+            color: {tokens["text_secondary"]} !important;
         }}
         
         /* Multiselect */
         .stMultiSelect [data-baseweb="tag"] {{
-            background-color: {tokens["accent_primary"]};
-            color: {tokens["text_inverse"]};
+            background-color: {tokens["accent_primary"]} !important;
+            color: {tokens["text_inverse"]} !important;
         }}
         
-        /* Progress bars */
-        .stProgress > div > div {{
-            background-color: {tokens["accent_primary"]};
+        .stMultiSelect [data-baseweb="select"] > div {{
+            background-color: {tokens["bg_secondary"]} !important;
+            border-color: {tokens["border_default"]} !important;
         }}
         
-        /* Radio buttons */
+        /* Sliders */
+        .stSlider label {{
+            color: {tokens["text_secondary"]} !important;
+        }}
+        
+        .stSlider [data-baseweb="slider"] div {{
+            color: {tokens["text_primary"]} !important;
+        }}
+        
+        /* Radio buttons and checkboxes */
         .stRadio > div {{
             background-color: transparent;
         }}
         
-        .stRadio label {{
+        .stRadio label, .stCheckbox label {{
             color: {tokens["text_primary"]} !important;
         }}
         
-        /* Spacing utilities */
+        /* ===== PROGRESS BARS ===== */
+        .stProgress > div > div {{
+            background-color: {tokens["accent_primary"]};
+        }}
+        
+        /* ===== UTILITY CLASSES ===== */
         .section-spacing {{
             margin-top: 1.5rem;
             margin-bottom: 1.5rem;
         }}
         
-        /* Card container */
         .card {{
             background-color: {tokens["bg_secondary"]};
             border: 1px solid {tokens["border_default"]};
             border-radius: 0.75rem;
             padding: 1.25rem;
             margin-bottom: 1rem;
+        }}
+        
+        .card p, .card span {{
+            color: {tokens["text_secondary"]} !important;
+        }}
+        
+        .card h1, .card h2, .card h3, .card h4, .card h5, .card h6 {{
+            color: {tokens["text_primary"]} !important;
         }}
         
         /* Loading skeleton */
@@ -431,16 +588,44 @@ def inject_custom_css():
         /* Winner badges */
         .winner-badge {{
             background-color: {tokens["positive"]}20;
-            color: {tokens["positive"]};
+            color: {tokens["positive"]} !important;
             padding: 0.5rem 1rem;
             border-radius: 0.5rem;
             font-weight: 600;
             text-align: center;
         }}
         
-        /* Plotly charts - ensure proper background */
+        /* ===== PLOTLY CHARTS ===== */
         .js-plotly-plot .plotly {{
             background-color: {tokens["chart_bg"]} !important;
+        }}
+        
+        /* Ensure Plotly tooltips are readable */
+        .plotly .hoverlayer text {{
+            fill: {tokens["text_primary"]} !important;
+        }}
+        
+        /* ===== MATPLOTLIB FIGURES ===== */
+        .stImage img, [data-testid="stImage"] img {{
+            border-radius: 0.5rem;
+        }}
+        
+        /* ===== TOOLTIP/POPOVER ===== */
+        [data-baseweb="popover"] {{
+            background-color: {tokens["bg_elevated"]} !important;
+        }}
+        
+        [data-baseweb="popover"] * {{
+            color: {tokens["text_primary"]} !important;
+        }}
+        
+        /* ===== JSON VIEWER (for debugging) ===== */
+        .stJson {{
+            background-color: {tokens["bg_muted"]} !important;
+        }}
+        
+        .stJson * {{
+            color: {tokens["text_secondary"]} !important;
         }}
     </style>
     """

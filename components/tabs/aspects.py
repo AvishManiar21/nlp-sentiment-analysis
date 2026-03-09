@@ -13,7 +13,15 @@ try:
     import matplotlib.pyplot as plt
     WORDCLOUD_AVAILABLE = True
 except ImportError:
-    WORDCLOUD_AVAILABLE = False
+WORDCLOUD_AVAILABLE = False
+
+
+@st.cache_data(show_spinner=False)
+def _cached_aspect_sentiments(df: pd.DataFrame) -> pd.DataFrame:
+    """Cached wrapper around opinion miner to avoid repeated heavy computation."""
+    from src.opinion_miner import extract_aspect_sentiments
+
+    return extract_aspect_sentiments(df, dynamic=False)
 
 
 def render_aspect_analysis(df: pd.DataFrame):
@@ -21,8 +29,7 @@ def render_aspect_analysis(df: pd.DataFrame):
     st.subheader("Aspect-Level Opinion Mining")
     
     try:
-        from src.opinion_miner import extract_aspect_sentiments
-        aspect_df = extract_aspect_sentiments(df, dynamic=False)
+        aspect_df = _cached_aspect_sentiments(df)
     except Exception as e:
         st.warning(f"Could not perform aspect analysis: {e}")
         return

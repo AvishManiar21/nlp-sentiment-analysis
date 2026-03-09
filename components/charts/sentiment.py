@@ -4,7 +4,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from utils.theme import apply_chart_theme, get_sentiment_colors
+from utils.theme import apply_chart_theme, get_sentiment_colors, get_theme_tokens
 
 
 def render_sentiment_pie(df: pd.DataFrame):
@@ -41,7 +41,14 @@ def render_sentiment_histogram(df: pd.DataFrame):
         opacity=0.7,
         name="Ensemble Score",
     ))
-    fig.add_vline(x=0, line_dash="dash", line_color=colors["negative"], annotation_text="Neutral")
+    tokens = get_theme_tokens()
+    fig.add_vline(
+        x=0,
+        line_dash="dash",
+        line_color=colors["neutral"],
+        annotation_text="Neutral",
+        annotation_font_color=tokens["text_secondary"],
+    )
     apply_chart_theme(
         fig,
         title="Sentiment Score Distribution",

@@ -4,6 +4,10 @@ import streamlit as st
 import pandas as pd
 import json
 from pathlib import Path
+import time
+import os
+
+from utils.logger import log_data_load
 
 DATA_DIR = Path(__file__).parent.parent / "data"
 OUTPUT_DIR = Path(__file__).parent.parent / "outputs"
@@ -11,6 +15,10 @@ RESULTS_DIR = Path(__file__).parent.parent / "results"
 MODELS_DIR = Path(__file__).parent.parent / "models"
 
 CLOUD_SAMPLE_SIZE = 30000
+
+# Optional Cloud-specific sampling to keep the dashboard responsive
+IS_CLOUD_MODE = os.getenv("CLOUD_MODE", "").lower() == "true"
+CLOUD_DISPLAY_SAMPLE_SIZE = int(os.getenv("CLOUD_DISPLAY_SAMPLE_SIZE", "20000"))
 
 
 def generate_data_for_cloud(sample_size=CLOUD_SAMPLE_SIZE):
@@ -83,6 +91,7 @@ def generate_data_for_cloud(sample_size=CLOUD_SAMPLE_SIZE):
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_data():
     """Load analyzed review data. Generate if not found (for cloud deployment)."""
+    start = time.perf_counter()
     path = DATA_DIR / "reviews_with_sentiment.csv"
     
     if not path.exists():
@@ -98,6 +107,13 @@ def load_data():
         df["ground_truth"] = df["rating"].apply(
             lambda r: "negative" if r <= 2 else ("neutral" if r == 3 else "positive")
         )
+    
+    # On Streamlit Cloud, optionally downsample for faster interactions
+    if IS_CLOUD_MODE and len(df) > CLOUD_DISPLAY_SAMPLE_SIZE:
+        df = df.sample(CLOUD_DISPLAY_SAMPLE_SIZE, random_state=42).reset_index(drop=True)
+    
+    duration_ms = (time.perf_counter() - start) * 1000
+    log_data_load(source=str(path), count=len(df), duration_ms=duration_ms)
     
     return df
 

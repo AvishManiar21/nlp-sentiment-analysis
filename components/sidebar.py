@@ -2,7 +2,6 @@
 
 import streamlit as st
 import pandas as pd
-from utils.theme import toggle_theme, is_dark_mode, get_theme_tokens
 from utils.export import render_export_section
 
 BRAND_EXCLUDE_PATTERNS = [
@@ -58,33 +57,10 @@ def _get_filter_brands(df, top_n=BRAND_TOP_N):
     return ["All"] + sorted(top.index.tolist())
 
 
-def render_theme_toggle():
-    """Render theme toggle in sidebar with clean state management."""
-    dark = is_dark_mode()
-    tokens = get_theme_tokens()
-    
-    col1, col2 = st.sidebar.columns([1, 3])
-    
-    with col1:
-        st.sidebar.write("☀️" if not dark else "🌙")
-    
-    with col2:
-        theme_label = "Dark Mode" if not dark else "Light Mode"
-        if st.sidebar.button(
-            f"Switch to {theme_label}",
-            use_container_width=True,
-            key="theme_toggle_btn"
-        ):
-            toggle_theme()
-            st.rerun()
-
-
 def render_sidebar(df: pd.DataFrame) -> pd.DataFrame:
     """Render sidebar filters and return filtered DataFrame."""
     st.sidebar.header("Filters")
-    
-    render_theme_toggle()
-    
+
     st.sidebar.divider()
     
     categories = ["All"] + sorted(df["category"].dropna().unique().tolist())
