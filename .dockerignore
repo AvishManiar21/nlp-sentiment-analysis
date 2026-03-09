@@ -1,0 +1,84 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+var
+sdist
+develop-eggs
+.installed.cfg
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual environments
+venv
+.venv
+ENV
+env
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+.cursor
+
+# Testing
+.pytest_cache
+.coverage
+htmlcov
+.tox
+.nox
+
+# Data files (will be generated)
+data/*.csv
+models/*.pkl
+models/*.joblib
+outputs/*.png
+outputs/*.jpg
+results/*.json
+results/*.csv
+
+# Logs
+logs/
+*.log
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Documentation
+docs/_build
+*.md
+!README.md
+
+# Miscellaneous
+.DS_Store
+Thumbs.db
+*.bak
+*.tmp
+*.temp
+
+# Notebooks
+*.ipynb
+.ipynb_checkpoints
+
+# Agent transcripts
+agent-transcripts/
+
+# Plans
+.cursor/plans/

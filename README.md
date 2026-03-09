@@ -4,6 +4,7 @@
 [![codecov](https://codecov.io/gh/AvishManiar21/nlp-sentiment-analysis/branch/master/graph/badge.svg)](https://codecov.io/gh/AvishManiar21/nlp-sentiment-analysis)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](https://www.docker.com/)
 [![HuggingFace Dataset](https://img.shields.io/badge/HuggingFace-Dataset-orange)](https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023)
 
 ## Live Demo
@@ -12,150 +13,195 @@ Try the interactive dashboard: **[NLP Sentiment Analysis App](https://nlp-sentim
 
 ---
 
-A comprehensive sentiment analysis pipeline using **real Amazon product reviews** with multiple ML models, rigorous evaluation metrics, and interactive visualizations.
+A production-ready sentiment analysis platform using **real Amazon product reviews** with multiple ML models, business insights, and interactive visualizations.
 
-## Features
+## Key Features
 
-- **Real-World Data**: ~50,000 genuine Amazon product reviews with real timestamps, categories, and brands
-- **Multiple Sentiment Models**:
-  - VADER (rule-based, optimized for social media)
-  - TextBlob (pattern-based polarity analysis)
-  - Logistic Regression (TF-IDF features) - **89.6% accuracy**
-  - Multinomial Naive Bayes (TF-IDF features) - **87.1% accuracy**
-  - DistilBERT fine-tuning (optional, requires GPU)
-- **Rigorous Evaluation**: Train/test split, accuracy, precision, recall, F1, confusion matrices
+### Analysis Capabilities
+- **Multiple Sentiment Models**: VADER, TextBlob, Logistic Regression (89.6% accuracy), Naive Bayes
+- **Business Insights**: Automated alerts, top issues detection, actionable recommendations
+- **Comparison Mode**: Side-by-side brand/category analysis with radar charts
 - **Opinion Mining**: Aspect extraction, sentiment drivers, category analysis
-- **Interactive Dashboard**: Streamlit app with filters, visualizations, model comparison
-- **REST API**: FastAPI endpoints for real-time sentiment predictions
+- **Temporal Analysis**: Sentiment trends over time
 
-## Dataset
+### Dashboard Features
+- **8 Interactive Tabs**: Overview, Business Insights, Compare, Categories, Aspects, Trends, Model Performance, Deep Dive
+- **Dark Mode Support**: Toggle between light and dark themes
+- **Export Functionality**: Download filtered data as CSV or Excel
+- **Real-time Filtering**: Category, brand, sentiment, rating, and date filters
 
-**Primary: McAuley-Lab Amazon Reviews 2023** – Real categories, brands, ratings, and timestamps.
+### Production Ready
+- **Docker Support**: Multi-container deployment with docker-compose
+- **REST API**: FastAPI endpoints for real-time predictions
+- **Structured Logging**: JSON logging for monitoring and debugging
+- **Modular Architecture**: Clean component-based code structure
 
-- **Source**: JSONL files from [HuggingFace](https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023) (UCSD datarepo URLs attempted first)
-- **Fields**: Review text, ratings, timestamps, main category, store (brand), helpful votes, verified purchase
-- **Sample size**: ~50,000 reviews (configurable; adjust for larger samples on more powerful machines)
-- **Labels**: Sentiment from star ratings (≤2 negative, ≥4 positive, 3 neutral)
+## Architecture
 
+```mermaid
+flowchart TB
+    subgraph DataLayer[Data Layer]
+        HF[HuggingFace Dataset]
+        DL[Data Loader]
+        PP[Preprocessor]
+    end
+    
+    subgraph MLLayer[ML Layer]
+        SA[Sentiment Analyzer]
+        ML[ML Models]
+        OM[Opinion Miner]
+    end
+    
+    subgraph AppLayer[Application Layer]
+        ST[Streamlit Dashboard]
+        API[FastAPI REST API]
+    end
+    
+    subgraph Components[Dashboard Components]
+        OV[Overview]
+        BI[Business Insights]
+        CM[Compare Mode]
+        EX[Export]
+    end
+    
+    HF --> DL
+    DL --> PP
+    PP --> SA
+    PP --> ML
+    SA --> OM
+    ML --> ST
+    ML --> API
+    OM --> ST
+    ST --> Components
+```
+
+## Project Structure
+
+```
+nlp-sentiment-analysis/
+├── app.py                     # Streamlit dashboard (slim entry point)
+├── main.py                    # CLI pipeline script
+├── Dockerfile                 # Docker image for dashboard
+├── docker-compose.yml         # Multi-service deployment
+├── components/                # Modular UI components
+│   ├── header.py              # Page header
+│   ├── sidebar.py             # Filters and controls
+│   ├── kpi_cards.py           # Metric cards
+│   ├── charts/                # Chart components
+│   │   ├── sentiment.py       # Sentiment charts
+│   │   ├── category.py        # Category analysis
+│   │   ├── temporal.py        # Time series
+│   │   └── comparison.py      # Comparison charts
+│   └── tabs/                  # Tab components
+│       ├── overview.py        # Overview tab
+│       ├── insights.py        # Business Insights tab
+│       ├── compare.py         # Comparison Mode tab
+│       ├── categories.py      # Categories tab
+│       ├── aspects.py         # Aspects tab
+│       ├── trends.py          # Trends tab
+│       ├── performance.py     # Model Performance tab
+│       └── deep_dive.py       # Deep Dive tab
+├── utils/                     # Utility modules
+│   ├── theme.py               # Theme and styling
+│   ├── cache.py               # Data caching
+│   ├── export.py              # Export functionality
+│   ├── loading.py             # Loading states
+│   └── logger.py              # Structured logging
+├── src/                       # Core ML modules
+│   ├── data_loader.py         # Data fetching
+│   ├── preprocessor.py        # Text preprocessing
+│   ├── sentiment_analyzer.py  # VADER + TextBlob
+│   ├── ml_models.py           # ML training
+│   ├── model_evaluator.py     # Evaluation
+│   └── opinion_miner.py       # Aspect extraction
+├── api/                       # REST API
+│   ├── main.py                # FastAPI app
+│   ├── schemas.py             # Request/response models
+│   └── predictor.py           # Prediction service
+└── tests/                     # Unit tests
+```
+
+## Quick Start
+
+### Option 1: Docker (Recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/AvishManiar21/nlp-sentiment-analysis.git
+cd nlp-sentiment-analysis
+
+# Start all services
+docker-compose up -d
+
+# Access the dashboard at http://localhost:8501
+# Access the API at http://localhost:8000
+```
+
+### Option 2: Local Development
+
+```bash
+# Clone and setup
+git clone https://github.com/AvishManiar21/nlp-sentiment-analysis.git
+cd nlp-sentiment-analysis
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# venv\Scripts\activate   # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the pipeline (downloads data, trains models)
+python main.py
+
+# Launch the dashboard
+streamlit run app.py
+
+# Or run the API
+uvicorn api.main:app --reload --port 8000
+```
+
+## Dashboard Tabs
+
+| Tab | Description |
+|-----|-------------|
+| **Overview** | KPI metrics, sentiment distribution, confusion matrix |
+| **Business Insights** | Automated alerts, top issues, recommendations |
+| **Compare** | Side-by-side brand/category comparison with radar charts |
+| **Categories & Brands** | Category sentiment analysis, brand positioning |
+| **Aspects & Drivers** | Aspect-level opinion mining, word clouds |
+| **Trends** | Temporal sentiment trends, VADER vs TextBlob comparison |
+| **Model Performance** | Accuracy comparison, F1 scores, best models |
+| **Deep Dive** | Sample reviews, search functionality |
 
 ## Results
-
-Performance on 10,000 test samples (binary classification):
 
 | Model | Accuracy | F1 Score | Precision | Recall |
 |-------|----------|----------|-----------|--------|
 | **Logistic Regression** | **89.6%** | 0.896 | 0.896 | 0.896 |
 | Naive Bayes | 87.1% | 0.871 | 0.871 | 0.871 |
 | VADER | 70.5% | 0.699 | 0.770 | 0.705 |
-| Ensemble (VADER+TextBlob) | 70.3% | 0.698 | 0.774 | 0.703 |
+| Ensemble | 70.3% | 0.698 | 0.774 | 0.703 |
 | TextBlob | 61.5% | 0.622 | 0.794 | 0.615 |
 
-*ML models significantly outperform rule-based methods when labeled training data is available.*
-
-## Project Structure
-
-```
-nlp-sentiment-analysis/
-├── main.py                    # Main pipeline script
-├── app.py                     # Streamlit dashboard
-├── requirements.txt           # Python dependencies
-├── README.md                  # This file
-├── src/
-│   ├── data_loader.py         # Amazon Reviews fetcher (HuggingFace)
-│   ├── preprocessor.py        # Text cleaning, tokenization, lemmatization
-│   ├── sentiment_analyzer.py  # VADER + TextBlob analysis
-│   ├── ml_models.py           # Logistic Regression, Naive Bayes training
-│   ├── transformer_model.py   # DistilBERT fine-tuning
-│   ├── model_evaluator.py     # Model comparison and metrics
-│   ├── opinion_miner.py       # Aspect extraction, driver analysis
-│   └── visualizer.py          # Charts and visualizations
-├── api/
-│   ├── main.py                # FastAPI application
-│   ├── schemas.py             # Pydantic request/response models
-│   └── predictor.py           # Model prediction service
-├── tests/                     # Unit and API tests
-├── data/                      # Generated data files (gitignored)
-├── models/                    # Saved ML models (gitignored)
-├── outputs/                   # Visualization outputs (gitignored)
-└── results/                   # Evaluation results (gitignored)
-```
-
-## Quick Start
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/YOUR_USERNAME/nlp-sentiment-analysis.git
-cd nlp-sentiment-analysis
-```
-
-### 2. Create virtual environment
-
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
-```
-
-### 3. Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Run the pipeline
-
-```bash
-python main.py
-```
-
-This will:
-1. Download ~50,000 real Amazon reviews (McAuley-Lab JSONL, with amazon_polarity fallback)
-2. Preprocess text (clean, tokenize, lemmatize)
-3. Run VADER + TextBlob sentiment analysis
-4. Train Logistic Regression and Naive Bayes models
-5. Evaluate and compare all models
-6. Generate visualizations
-
-### 5. Launch the dashboard
-
-```bash
-python -m streamlit run app.py
-```
-
-Open http://localhost:8501 in your browser.
-
-### 6. Run the REST API
-
-```bash
-uvicorn api.main:app --reload --port 8000
-```
-
-Open http://localhost:8000/docs for interactive API documentation.
-
 ## REST API
-
-The project includes a FastAPI-based REST API for sentiment predictions.
 
 ### Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/` | API info and health check |
+| GET | `/` | API info |
 | GET | `/health` | Health status |
-| GET | `/models` | List available models |
-| POST | `/predict` | Predict sentiment for single text |
-| POST | `/predict/batch` | Predict sentiment for multiple texts |
+| GET | `/models` | Available models |
+| POST | `/predict` | Single prediction |
+| POST | `/predict/batch` | Batch predictions |
 
-### Single Prediction
+### Example
 
 ```bash
 curl -X POST "http://localhost:8000/predict" \
   -H "Content-Type: application/json" \
   -d '{"text": "This product is amazing!", "model": "logistic_regression"}'
 ```
-
-Response:
 
 ```json
 {
@@ -167,90 +213,51 @@ Response:
 }
 ```
 
-### Batch Prediction
+## Docker Deployment
 
 ```bash
-curl -X POST "http://localhost:8000/predict/batch" \
-  -H "Content-Type: application/json" \
-  -d '{"texts": ["Great product!", "Awful quality"], "model": "vader"}'
+# Build and run dashboard only
+docker build -t nlp-sentiment .
+docker run -p 8501:8501 nlp-sentiment
+
+# Run with docker-compose (dashboard + API)
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
 ```
 
-### Available Models
+## Environment Configuration
 
-- `vader` - Rule-based (VADER)
-- `textblob` - Rule-based (TextBlob)
-- `logistic_regression` - ML model (default)
-- `naive_bayes` - ML model
-
-## Pipeline Options
+Copy `.env.example` to `.env` and configure:
 
 ```bash
-# Force reload data from HuggingFace
-python main.py --force-reload
-
-# Skip ML model training
-python main.py --skip-ml
-
-# Train DistilBERT (requires GPU for reasonable speed)
-python main.py --train-transformer
-
-# Limit dataset size for quick testing
-python main.py --sample-size 5000
+cp .env.example .env
 ```
 
-## Models & Methodology
+Key settings:
+- `CLOUD_SAMPLE_SIZE`: Number of reviews (default: 30000)
+- `LOG_LEVEL`: Logging level (DEBUG, INFO, WARNING, ERROR)
+- `API_AUTH_ENABLED`: Enable API authentication
 
-### Rule-Based Models (Unsupervised)
+## Technologies
 
-| Model | Description |
-|-------|-------------|
-| **VADER** | Lexicon-based sentiment analyzer optimized for social media. Returns compound score (-1 to +1). |
-| **TextBlob** | Pattern-based NLP library. Returns polarity (-1 to +1) and subjectivity (0 to 1). |
-| **Ensemble** | Weighted combination: 65% VADER + 35% TextBlob |
-
-### ML Models (Supervised)
-
-| Model | Description |
-|-------|-------------|
-| **Logistic Regression** | Linear classifier with TF-IDF features (1-2 grams, 10K features). Balanced class weights. |
-| **Naive Bayes** | Multinomial NB with TF-IDF features. Fast training, good baseline. |
-| **DistilBERT** | Fine-tuned transformer model. ~97% of BERT performance, 60% faster. (Optional) |
-
-### Evaluation Metrics
-
-- **Accuracy**: Overall correct predictions
-- **Precision**: True positives / (True positives + False positives)
-- **Recall**: True positives / (True positives + False negatives)
-- **F1 Score**: Harmonic mean of precision and recall
-- **Cohen's Kappa**: Agreement accounting for chance
-- **Matthews Correlation Coefficient**: Balanced measure for imbalanced classes
-
-## Key Insights
-
-1. **ML models significantly outperform rule-based methods** when labeled training data is available
-2. **Logistic Regression** achieves 89.6% accuracy with simple TF-IDF features
-3. **VADER** performs reasonably well (70.5%) as an unsupervised baseline
-4. **TextBlob** tends to produce more neutral predictions, lowering accuracy
-5. **Aspect analysis** reveals which product features drive positive/negative sentiment
-
-## Technologies Used
-
-- **Python 3.10+**
-- **scikit-learn** - ML models and evaluation
-- **NLTK** - VADER sentiment, tokenization
-- **TextBlob** - Pattern-based sentiment
-- **HuggingFace Datasets** - Data loading
-- **FastAPI** - REST API
+- **Python 3.10+** - Core language
 - **Streamlit** - Interactive dashboard
-- **Plotly/Matplotlib** - Visualizations
-- **pandas/numpy** - Data processing
+- **FastAPI** - REST API
+- **scikit-learn** - ML models
+- **NLTK/TextBlob** - NLP processing
+- **Plotly** - Visualizations
+- **Docker** - Containerization
+- **HuggingFace** - Dataset loading
 
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
 
-The Amazon Reviews dataset is subject to Amazon's terms of use for research purposes.
+---
 
-## Author
-
-Built as a demonstration of NLP sentiment analysis techniques, from rule-based methods to machine learning classifiers.
+Built as a production-ready demonstration of NLP sentiment analysis, from data processing to deployment.
