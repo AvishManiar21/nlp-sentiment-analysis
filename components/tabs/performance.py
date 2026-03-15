@@ -3,7 +3,9 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from pathlib import Path
 from utils.theme import apply_chart_theme
+from utils.cache import OUTPUT_DIR, RESULTS_DIR
 
 
 def render_performance_tab(df: pd.DataFrame, eval_results: dict):
@@ -95,7 +97,36 @@ def render_performance_tab(df: pd.DataFrame, eval_results: dict):
             )
     
     st.markdown("### Confusion Matrices")
-    st.info(
-        "Confusion matrix images are saved in the `outputs/` directory. "
-        "Check `confusion_matrix_*.png` files."
-    )
+    
+    # Try to display confusion matrix images from outputs/
+    cm_images = sorted(Path(OUTPUT_DIR).glob("confusion_matrix_*.png"))
+    
+    if cm_images:
+        cols = st.columns(2)
+        for i, img_path in enumerate(cm_images):
+            model_name = img_path.stem.replace("confusion_matrix_", "").replace("_", " ").title()
+            with cols[i % 2]:
+                st.image(str(img_path), caption=f"Confusion Matrix: {model_name}", use_container_width=True)
+    else:
+        # Fallback: try to render from CSV in results/
+        cm_csvs = sorted(Path(RESULTS_DIR).glob("evaluation_confusion_matrix_*.csv"))
+        if cm_csvs:
+            cols = st.columns(2)
+            for i, csv_path in enumerate(cm_csvs):
+                model_name = csv_path.stem.replace("evaluation_confusion_matrix_", "").replace("_", " ").title()
+                cm_df = pd.read_csv(csv_path, index_col=0)
+                fig = px.imshow(
+                    cm_df,
+                    labels=dict(x="Predicted", y="Actual", color="Count"),
+                    color_continuous_scale="Blues",
+                    text_auto=True,
+                    title=f"Confusion Matrix: {model_name}",
+                )
+                apply_chart_theme(fig, height=350)
+                with cols[i % 2]:
+                    st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info(
+                "Confusion matrices will appear here after you run the full pipeline. "
+                "Run `python main.py` to train models and generate visualizations."
+            )

@@ -6,6 +6,10 @@ import pandas as pd
 
 def render_kpi_row(df: pd.DataFrame):
     """Render KPI metrics row with key statistics."""
+    if len(df) == 0:
+        st.info("No data to display. Adjust filters to see metrics.")
+        return
+    
     cols = st.columns(6)
     
     with cols[0]:

@@ -4,6 +4,7 @@ import streamlit as st
 import pandas as pd
 from components.charts.comparison import render_comparison_radar, render_comparison_bars, render_aspect_comparison
 from components.kpi_cards import render_kpi_comparison
+from components.sidebar import _is_valid_brand
 
 
 def render_compare_tab(df: pd.DataFrame):
@@ -39,8 +40,13 @@ def render_compare_tab(df: pd.DataFrame):
     
     valid_items = item_stats[item_stats["count"] >= 10][group_col].tolist()
     
+    # Filter out invalid brands (e.g. "Unknown", "Format: Audio CD")
+    if group_col == "brand":
+        valid_items = [b for b in valid_items if _is_valid_brand(b)]
+    
     if len(valid_items) < 2:
-        st.info(f"Need at least 2 {compare_by.lower()}s with 10+ reviews each.")
+        st.info(f"Need at least 2 {compare_by.lower()}s with 10+ reviews each. "
+                f"{'Invalid brands (e.g. Unknown) are excluded.' if group_col == 'brand' else ''}")
         return
     
     selected_items = st.multiselect(

@@ -223,6 +223,10 @@ def render_insights_tab(df: pd.DataFrame):
     st.markdown("### Quick Stats Summary")
     
     total = len(df)
+    if total == 0:
+        st.info("No data for quick stats. Adjust filters to see insights.")
+        return
+    
     pos_count = (df["sentiment_label"] == "positive").sum()
     neg_count = (df["sentiment_label"] == "negative").sum()
     neu_count = (df["sentiment_label"] == "neutral").sum()

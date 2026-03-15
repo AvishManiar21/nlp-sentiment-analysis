@@ -30,7 +30,18 @@ def main():
     df = load_data()
     eval_results = load_evaluation_results()
     
+    if len(df) == 0:
+        st.error("No review data found. Run `python main.py` to generate data, or check the data folder.")
+        st.stop()
+    
     filtered_df = render_sidebar(df)
+    
+    if len(filtered_df) == 0:
+        st.warning(
+            "No reviews match your filters. Try adjusting the sidebar filters "
+            "(Category, Brand, Sentiment, Rating, or Date Range) to see data."
+        )
+        st.stop()
     
     tabs = st.tabs([
         "Overview",

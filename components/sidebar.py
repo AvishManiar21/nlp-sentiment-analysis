@@ -60,7 +60,7 @@ def _get_filter_brands(df, top_n=BRAND_TOP_N):
 def render_sidebar(df: pd.DataFrame) -> pd.DataFrame:
     """Render sidebar filters and return filtered DataFrame."""
     st.sidebar.header("Filters")
-
+    st.sidebar.caption("Narrow results by category, brand, sentiment, rating, or date.")
     st.sidebar.divider()
     
     categories = ["All"] + sorted(df["category"].dropna().unique().tolist())
@@ -116,6 +116,8 @@ def render_sidebar(df: pd.DataFrame) -> pd.DataFrame:
     
     st.sidebar.divider()
     st.sidebar.metric("Filtered Reviews", f"{len(filtered):,}")
+    if len(df) > 0 and len(filtered) != len(df):
+        st.sidebar.caption(f"Showing {len(filtered):,} of {len(df):,} total reviews")
     
     render_export_section(filtered)
     

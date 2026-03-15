@@ -8,6 +8,10 @@ def render_sample_reviews(df: pd.DataFrame):
     """Render sample reviews section."""
     st.subheader("Sample Reviews")
     
+    if len(df) == 0:
+        st.info("No reviews to display. Adjust filters to see sample reviews.")
+        return
+    
     text_col = "review_text" if "review_text" in df.columns else "cleaned_text"
     product_col = "product" if "product" in df.columns else None
     
@@ -50,6 +54,10 @@ def render_review_search(df: pd.DataFrame):
     """Render review search functionality."""
     st.subheader("Search Reviews")
     
+    if len(df) == 0:
+        st.info("No reviews to search. Adjust filters first.")
+        return
+    
     text_col = "review_text" if "review_text" in df.columns else "cleaned_text"
     
     search_query = st.text_input("Search for keywords in reviews", placeholder="e.g., battery, shipping, quality")
@@ -60,7 +68,9 @@ def render_review_search(df: pd.DataFrame):
         
         st.write(f"Found **{len(results):,}** reviews containing '{search_query}'")
         
-        if len(results) > 0:
+        if len(results) == 0:
+            st.caption("Try different keywords or broaden your filters.")
+        elif len(results) > 0:
             for _, row in results.head(10).iterrows():
                 sentiment_emoji = "🟢" if row["sentiment_label"] == "positive" else (
                     "🔴" if row["sentiment_label"] == "negative" else "🟡"

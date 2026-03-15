@@ -315,13 +315,15 @@ def inject_custom_css():
         .stTabs [data-baseweb="tab-list"] {{
             background-color: {tokens["bg_secondary"]};
             border-radius: 0.5rem;
-            padding: 0.25rem;
-            gap: 0.25rem;
+            padding: 0.5rem 0.75rem;
+            gap: 1rem;
         }}
         
         .stTabs [data-baseweb="tab"] {{
             color: {tokens["text_secondary"]} !important;
             background-color: transparent;
+            padding: 0.5rem 1rem !important;
+            margin-right: 0.25rem;
         }}
         
         .stTabs [aria-selected="true"] {{
