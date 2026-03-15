@@ -53,6 +53,49 @@ def parse_args():
         default=None,
         help="Output directory for visualizations"
     )
+    # Deep Learning arguments
+    parser.add_argument(
+        "--train-dl",
+        action="store_true",
+        help="Train deep learning models (CNN/LSTM with TensorFlow/PyTorch)"
+    )
+    parser.add_argument(
+        "--dl-framework",
+        type=str,
+        choices=["tensorflow", "pytorch", "both"],
+        default="both",
+        help="Deep learning framework to use (default: both)"
+    )
+    parser.add_argument(
+        "--dl-model-type",
+        type=str,
+        choices=["cnn", "lstm", "both"],
+        default="cnn",
+        help="Type of deep learning model (default: cnn)"
+    )
+    parser.add_argument(
+        "--use-embeddings",
+        action="store_true",
+        help="Use pre-trained word embeddings (Word2Vec/GloVe)"
+    )
+    parser.add_argument(
+        "--embedding-name",
+        type=str,
+        default="glove-wiki-gigaword-100",
+        help="Pre-trained embedding to use (default: glove-wiki-gigaword-100)"
+    )
+    parser.add_argument(
+        "--dl-epochs",
+        type=int,
+        default=10,
+        help="Number of epochs for DL training (default: 10)"
+    )
+    parser.add_argument(
+        "--dl-batch-size",
+        type=int,
+        default=32,
+        help="Batch size for DL training (default: 32)"
+    )
     return parser.parse_args()
 
 
@@ -155,6 +198,108 @@ def step_train_ml_models(df, skip_ml=False):
     return ml_results
 
 
+def step_train_dl_models(df, args):
+    """Step 4.5: Train deep learning models (CNN/LSTM with TensorFlow/PyTorch)."""
+    if not args.train_dl:
+        print("\n[4.5/7] Skipping deep learning training (use --train-dl to enable)")
+        return None
+
+    print("\n[4.5/7] Training deep learning models...")
+
+    try:
+        from src.dl_trainer import train_model
+
+        dl_results = {}
+
+        # Determine which frameworks to use
+        frameworks = []
+        if args.dl_framework == "both":
+            frameworks = ["tensorflow", "pytorch"]
+        else:
+            frameworks = [args.dl_framework]
+
+        # Determine which model types to use
+        model_types = []
+        if args.dl_model_type == "both":
+            model_types = ["cnn", "lstm"]
+        else:
+            model_types = [args.dl_model_type]
+
+        # Train models for each combination
+        for framework in frameworks:
+            for model_type in model_types:
+                # Skip LSTM for TensorFlow (not implemented)
+                if framework == "tensorflow" and model_type == "lstm":
+                    print(f"  Skipping {model_type} for {framework} (not implemented)")
+                    continue
+
+                model_key = f"{model_type}_{framework}"
+                if args.use_embeddings:
+                    model_key += "_pretrained"
+
+                print(f"\n  Training {model_key}...")
+                print(f"    Framework: {framework}")
+                print(f"    Model type: {model_type}")
+                print(f"    Pre-trained embeddings: {args.use_embeddings}")
+                if args.use_embeddings:
+                    print(f"    Embedding: {args.embedding_name}")
+                print(f"    Epochs: {args.dl_epochs}")
+                print(f"    Batch size: {args.dl_batch_size}")
+
+                try:
+                    model, history = train_model(
+                        df=df,
+                        framework=framework,
+                        model_type=model_type,
+                        use_embeddings=args.use_embeddings,
+                        embedding_name=args.embedding_name,
+                        text_column="processed_text",
+                        label_column="ground_truth",
+                        epochs=args.dl_epochs,
+                        batch_size=args.dl_batch_size,
+                        max_seq_length=200,
+                        max_vocab_size=20000,
+                        save_dir="models/dl",
+                        tensorboard_dir="logs/tensorboard"
+                    )
+
+                    dl_results[model_key] = {
+                        'model': model,
+                        'history': history,
+                        'framework': framework,
+                        'model_type': model_type,
+                        'pretrained_embeddings': args.use_embeddings
+                    }
+
+                    # Print training results
+                    if framework == "tensorflow":
+                        print(f"    Final test accuracy: {history['test_accuracy']:.4f}")
+                    else:  # pytorch
+                        print(f"    Final test accuracy: {history['test_accuracy']:.4f}")
+
+                except Exception as e:
+                    print(f"    Error training {model_key}: {e}")
+                    import traceback
+                    traceback.print_exc()
+
+        if dl_results:
+            print(f"\n  Successfully trained {len(dl_results)} deep learning models")
+        else:
+            print("\n  No deep learning models were trained")
+
+        return dl_results
+
+    except ImportError as e:
+        print(f"  Deep learning dependencies not available: {e}")
+        print("  Install with: pip install tensorflow torch gensim")
+        return None
+    except Exception as e:
+        print(f"  Deep learning training failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
 def step_train_transformer(df, train_transformer=False):
     """Step 5: Train DistilBERT model (optional)."""
     if not train_transformer:
@@ -203,15 +348,16 @@ def step_train_transformer(df, train_transformer=False):
         return None
 
 
-def step_evaluate_models(df, ml_results, transformer_results):
+def step_evaluate_models(df, ml_results, dl_results, transformer_results):
     """Step 6: Evaluate and compare all models."""
     print("\n[6/7] Evaluating and comparing models...")
-    
+
     ml_model_results = ml_results.get("models", {}) if ml_results else {}
-    
+
     evaluation = compare_all_models(
         df,
         ml_results=ml_model_results,
+        dl_results=dl_results,
         transformer_results=transformer_results,
         text_column="review_text",
         processed_column="processed_text",
@@ -220,7 +366,7 @@ def step_evaluate_models(df, ml_results, transformer_results):
         include_transformer=transformer_results is not None,
         verbose=True,
     )
-    
+
     return evaluation
 
 
@@ -291,10 +437,12 @@ def main():
     df = step_sentiment_analysis(df, data_dir)
     
     ml_results = step_train_ml_models(df, skip_ml=args.skip_ml)
-    
+
+    dl_results = step_train_dl_models(df, args)
+
     transformer_results = step_train_transformer(df, train_transformer=args.train_transformer)
-    
-    evaluation_results = step_evaluate_models(df, ml_results, transformer_results)
+
+    evaluation_results = step_evaluate_models(df, ml_results, dl_results, transformer_results)
     
     mining_results = step_opinion_mining(df)
     
