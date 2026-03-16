@@ -9,17 +9,33 @@ import logging
 from typing import Optional, List, Tuple, Dict
 import numpy as np
 
-# TensorFlow/Keras imports
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers, models, regularizers
-from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
+# TensorFlow/Keras imports (optional)
+try:
+    import tensorflow as tf
+    from tensorflow import keras
+    from tensorflow.keras import layers, models, regularizers
+    from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
+    TF_AVAILABLE = True
+except ImportError:
+    TF_AVAILABLE = False
+    tf = None
+    keras = None
+    layers = None
+    models = None
+    regularizers = None
 
 # PyTorch imports
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
+
+# Optional imports
+try:
+    from torchinfo import summary as torch_summary
+    TORCHINFO_AVAILABLE = True
+except ImportError:
+    TORCHINFO_AVAILABLE = False
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -58,7 +74,20 @@ class TextCNNConfig:
         self.embedding_matrix = embedding_matrix
 
 
-def build_tensorflow_cnn(config: TextCNNConfig) -> keras.Model:
+def build_tensorflow_cnn(config: TextCNNConfig):
+    """Build CNN model for text classification using TensorFlow/Keras."""
+    if not TF_AVAILABLE:
+        raise ImportError(
+            "TensorFlow is not available. "
+            "TensorFlow doesn't support Python 3.14 yet. "
+            "Please use Python 3.10-3.12 for TensorFlow models, "
+            "or use PyTorch models instead."
+        )
+
+    return _build_tensorflow_cnn_impl(config)
+
+
+def _build_tensorflow_cnn_impl(config: TextCNNConfig) -> keras.Model:
     """
     Build CNN model for text classification using TensorFlow/Keras.
 
@@ -161,7 +190,7 @@ def build_tensorflow_cnn(config: TextCNNConfig) -> keras.Model:
     return model
 
 
-def build_tensorflow_cnn_hybrid(config: TextCNNConfig) -> keras.Model:
+def build_tensorflow_cnn_hybrid(config: TextCNNConfig):
     """
     Build hybrid CNN model with pre-trained embeddings (Word2Vec/GloVe).
 
@@ -173,6 +202,14 @@ def build_tensorflow_cnn_hybrid(config: TextCNNConfig) -> keras.Model:
     Returns:
         Compiled Keras model
     """
+    if not TF_AVAILABLE:
+        raise ImportError(
+            "TensorFlow is not available. "
+            "TensorFlow doesn't support Python 3.14 yet. "
+            "Please use Python 3.10-3.12 for TensorFlow models, "
+            "or use PyTorch models instead."
+        )
+
     if config.embedding_matrix is None:
         raise ValueError("embedding_matrix required for hybrid model")
 
@@ -444,7 +481,7 @@ def count_parameters(model) -> int:
         raise ValueError("Unsupported model type")
 
 
-def save_tensorflow_model(model: keras.Model, filepath: str) -> None:
+def save_tensorflow_model(model, filepath: str) -> None:
     """
     Save TensorFlow model.
 
@@ -452,12 +489,15 @@ def save_tensorflow_model(model: keras.Model, filepath: str) -> None:
         model: Keras model
         filepath: Path to save (without extension)
     """
+    if not TF_AVAILABLE:
+        raise ImportError("TensorFlow is not available")
+
     # Save in Keras format
     model.save(f"{filepath}.keras")
     logger.info(f"TensorFlow model saved to {filepath}.keras")
 
 
-def load_tensorflow_model(filepath: str) -> keras.Model:
+def load_tensorflow_model(filepath: str):
     """
     Load TensorFlow model.
 
@@ -467,6 +507,9 @@ def load_tensorflow_model(filepath: str) -> keras.Model:
     Returns:
         Loaded Keras model
     """
+    if not TF_AVAILABLE:
+        raise ImportError("TensorFlow is not available")
+
     model = keras.models.load_model(filepath)
     logger.info(f"TensorFlow model loaded from {filepath}")
     return model

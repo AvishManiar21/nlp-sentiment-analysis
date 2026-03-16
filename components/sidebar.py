@@ -3,6 +3,7 @@
 import streamlit as st
 import pandas as pd
 from utils.export import render_export_section
+from utils.cache import check_dl_models_available
 
 BRAND_EXCLUDE_PATTERNS = [
     "unknown",
@@ -118,7 +119,29 @@ def render_sidebar(df: pd.DataFrame) -> pd.DataFrame:
     st.sidebar.metric("Filtered Reviews", f"{len(filtered):,}")
     if len(df) > 0 and len(filtered) != len(df):
         st.sidebar.caption(f"Showing {len(filtered):,} of {len(df):,} total reviews")
-    
+
     render_export_section(filtered)
-    
+
+    # Deep Learning Models Section
+    st.sidebar.divider()
+    st.sidebar.subheader("🧠 Deep Learning")
+
+    dl_models = check_dl_models_available()
+
+    if dl_models:
+        st.sidebar.success(f"✓ {len(dl_models)} DL model(s) trained")
+
+        with st.sidebar.expander("View DL Models"):
+            for model in dl_models:
+                st.markdown(f"""
+                **{model['name']}**
+                - Framework: {model['framework']}
+                - Type: {model['type']}
+                """)
+    else:
+        st.sidebar.info("No DL models trained yet")
+        with st.sidebar.expander("Train DL Models"):
+            st.code("""python main.py --train-dl \\
+  --use-embeddings""", language="bash")
+
     return filtered

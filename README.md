@@ -234,6 +234,9 @@ python main.py --train-dl --dl-framework both --dl-model-type both --use-embeddi
 - **TensorBoard Integration**: Visualize training metrics and model architecture
 - **Early Stopping**: Prevent overfitting with automatic early stopping
 - **Model Checkpointing**: Save best models during training
+- **Dashboard Integration**: View trained models in the Model Performance tab
+
+📖 **[Read the complete Deep Learning Guide](DEEP_LEARNING_GUIDE.md)** for detailed training instructions, benchmarks, and best practices.
 
 ## REST API
 

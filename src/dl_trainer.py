@@ -13,12 +13,18 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 
-# TensorFlow imports
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras.callbacks import (
-    EarlyStopping, ReduceLROnPlateau, ModelCheckpoint, TensorBoard
-)
+# TensorFlow imports (optional)
+try:
+    import tensorflow as tf
+    from tensorflow import keras
+    from tensorflow.keras.callbacks import (
+        EarlyStopping, ReduceLROnPlateau, ModelCheckpoint, TensorBoard
+    )
+    TF_AVAILABLE = True
+except ImportError:
+    TF_AVAILABLE = False
+    tf = None
+    keras = None
 
 # PyTorch imports
 import torch
@@ -167,9 +173,11 @@ def train_tensorflow_model(
     batch_size: int = 32,
     save_dir: str = 'models/dl',
     tensorboard_dir: str = 'logs/tensorboard'
-) -> Tuple[keras.Model, Dict]:
+):
     """
     Train a TensorFlow/Keras model.
+
+    Note: TensorFlow is not available for Python 3.14+. Use PyTorch instead or downgrade to Python 3.10-3.12.
 
     Args:
         data_dict: Dictionary from prepare_data_for_dl()
@@ -183,6 +191,14 @@ def train_tensorflow_model(
     Returns:
         Tuple of (trained_model, training_history)
     """
+    if not TF_AVAILABLE:
+        raise ImportError(
+            "TensorFlow is not available. "
+            "TensorFlow doesn't support Python 3.14 yet. "
+            "Please use Python 3.10-3.12 for TensorFlow models, "
+            "or use --dl-framework pytorch to train PyTorch models instead."
+        )
+
     logger.info(f"Training TensorFlow {model_name} model...")
 
     # Create save directory
@@ -364,8 +380,7 @@ def train_pytorch_model(
         optimizer,
         mode='min',
         factor=0.5,
-        patience=3,
-        verbose=True
+        patience=3
     )
 
     # TensorBoard
@@ -540,6 +555,10 @@ def train_model(
     Returns:
         Tuple of (model, history)
     """
+    # Extract data preparation parameters from kwargs
+    max_seq_length = kwargs.pop('max_seq_length', 200)
+    max_vocab_size = kwargs.pop('max_vocab_size', 20000)
+
     # Initialize embedding manager if needed
     embedding_manager = None
     if use_embeddings:
@@ -548,7 +567,7 @@ def train_model(
         embedding_manager.load_embedding(embedding_name)
         embedding_manager.build_vocab(
             df[text_column].tolist(),
-            max_vocab_size=kwargs.get('max_vocab_size', 20000)
+            max_vocab_size=max_vocab_size
         )
 
     # Prepare data
@@ -557,11 +576,18 @@ def train_model(
         text_column=text_column,
         label_column=label_column,
         embedding_manager=embedding_manager,
-        max_seq_length=kwargs.get('max_seq_length', 200)
+        max_seq_length=max_seq_length
     )
 
     # Train model
     if framework.lower() == 'tensorflow':
+        if not TF_AVAILABLE:
+            raise ImportError(
+                "TensorFlow is not available. TensorFlow doesn't support Python 3.14 yet.\n"
+                "Options:\n"
+                "  1. Use --dl-framework pytorch instead\n"
+                "  2. Downgrade to Python 3.10-3.12 to use TensorFlow"
+            )
         model, history = train_tensorflow_model(
             data_dict,
             model_name=model_type,

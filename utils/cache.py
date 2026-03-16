@@ -123,14 +123,60 @@ def load_evaluation_results():
     """Load model evaluation results."""
     summary_path = RESULTS_DIR / "evaluation_summary.json"
     comparison_path = RESULTS_DIR / "evaluation_comparison.csv"
-    
+
     results = {}
-    
+
     if summary_path.exists():
         with open(summary_path, "r") as f:
             results["summary"] = json.load(f)
-    
+
     if comparison_path.exists():
         results["comparison"] = pd.read_csv(comparison_path)
-    
+
     return results if results else None
+
+
+@st.cache_data
+def check_dl_models_available():
+    """Check which deep learning models are trained and available."""
+    dl_models_dir = MODELS_DIR / "dl"
+
+    if not dl_models_dir.exists():
+        return []
+
+    available_models = []
+
+    # Check for TensorFlow models
+    tf_models = [
+        ("cnn_tensorflow", "CNN (TensorFlow)", ".keras"),
+        ("cnn_tensorflow_pretrained", "CNN + GloVe (TensorFlow)", ".keras"),
+    ]
+
+    for model_file, display_name, ext in tf_models:
+        if (dl_models_dir / f"{model_file}{ext}").exists():
+            available_models.append({
+                "file": model_file,
+                "name": display_name,
+                "framework": "TensorFlow",
+                "type": "CNN"
+            })
+
+    # Check for PyTorch models
+    pt_models = [
+        ("cnn_pytorch", "CNN (PyTorch)", ".pt"),
+        ("cnn_pytorch_pretrained", "CNN + GloVe (PyTorch)", ".pt"),
+        ("lstm_pytorch", "BiLSTM (PyTorch)", ".pt"),
+        ("lstm_pytorch_pretrained", "BiLSTM + GloVe (PyTorch)", ".pt"),
+    ]
+
+    for model_file, display_name, ext in pt_models:
+        if (dl_models_dir / f"{model_file}{ext}").exists():
+            model_type = "BiLSTM" if "lstm" in model_file else "CNN"
+            available_models.append({
+                "file": model_file,
+                "name": display_name,
+                "framework": "PyTorch",
+                "type": model_type
+            })
+
+    return available_models

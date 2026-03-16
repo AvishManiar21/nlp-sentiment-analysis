@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(conda --version:*)",
+      "Bash(pyenv --version:*)",
+      "Bash(py --list:*)",
+      "Bash(py:*)",
+      "Bash(source:*)",
+      "Bash(pip install:*)",
+      "Bash(python:*)",
+      "Bash(timeout 30 bash:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
