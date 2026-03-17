@@ -21,12 +21,45 @@ from components.tabs.deep_dive import render_deep_dive_tab
 from components.tabs.insights import render_insights_tab
 from components.tabs.compare import render_compare_tab
 from utils.cache import load_data, load_evaluation_results
+from utils.model_storage import ensure_models_available, get_model_info
 
 
 def main():
     """Main dashboard function."""
     render_header()
-    
+
+    # Ensure deep learning models are available
+    # On Streamlit Cloud, this will download models from HuggingFace Hub
+    # On local development, this checks if models exist locally
+    model_info = get_model_info()
+
+    if not model_info["models_exist_locally"] and model_info["hf_repo_configured"]:
+        with st.spinner("Downloading deep learning models from HuggingFace Hub..."):
+            st.info(
+                f"🤗 Downloading models from: {model_info['hf_repo']}\n\n"
+                f"This happens once on first run. Models will be cached for future use."
+            )
+
+            # Progress callback for user feedback
+            progress_placeholder = st.empty()
+
+            def progress_callback(current, total, filename):
+                progress_placeholder.progress(
+                    current / total,
+                    text=f"Downloading {filename} ({current}/{total})"
+                )
+
+            success = ensure_models_available(progress_callback=progress_callback)
+            progress_placeholder.empty()
+
+            if success:
+                st.success("✓ Models downloaded successfully!")
+            else:
+                st.warning(
+                    "⚠️ Some models could not be downloaded. "
+                    "Deep learning model features may be limited."
+                )
+
     df = load_data()
     eval_results = load_evaluation_results()
     

@@ -26,6 +26,9 @@ tensorflow>=2.15.0
 # Pre-trained word embeddings
 gensim>=4.3.0  # Word2Vec, FastText, GloVe loading
 
+# Model storage and deployment
+huggingface-hub>=0.20.0  # For downloading models from HuggingFace Hub
+
 # Visualization and logging (comes with PyTorch)
 # tensorboard>=2.15.0  # Already included with PyTorch installation
 
