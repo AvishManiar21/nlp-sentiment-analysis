@@ -51,7 +51,10 @@ models/
 
 # Output files (regenerated)
 outputs/
-results/
+
+# Results - commit JSON files but exclude temporary CSVs
+results/*.csv
+!results/evaluation_comparison.csv
 
 # HuggingFace cache
 .cache/

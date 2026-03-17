@@ -1,0 +1,82 @@
+{
+  "best_models": {
+    "accuracy": {
+      "model": "Naive Bayes",
+      "value": 0.8541183905624605
+    },
+    "f1_weighted": {
+      "model": "cnn_pytorch",
+      "value": 0.8464495300056591
+    },
+    "f1_macro": {
+      "model": "Logistic Regression",
+      "value": 0.6790141851957295
+    },
+    "precision_weighted": {
+      "model": "Logistic Regression",
+      "value": 0.8637700649081494
+    },
+    "recall_weighted": {
+      "model": "Naive Bayes",
+      "value": 0.8541183905624605
+    },
+    "cohen_kappa": {
+      "model": "Ensemble (VADER+TextBlob)",
+      "value": 0.4070008328607675
+    },
+    "matthews_corrcoef": {
+      "model": "Ensemble (VADER+TextBlob)",
+      "value": 0.4218143844500278
+    }
+  },
+  "models_evaluated": [
+    "vader",
+    "textblob",
+    "ensemble",
+    "logistic_regression",
+    "naive_bayes",
+    "cnn_pytorch"
+  ],
+  "vader": {
+    "model_name": "VADER",
+    "accuracy": 0.7935407756967999,
+    "f1_weighted": 0.7706957910100899,
+    "f1_macro": 0.5165312160880943,
+    "n_samples": 47467
+  },
+  "textblob": {
+    "model_name": "TextBlob",
+    "accuracy": 0.7684285924958392,
+    "f1_weighted": 0.7552775037469831,
+    "f1_macro": 0.5015703829716105,
+    "n_samples": 47467
+  },
+  "ensemble": {
+    "model_name": "Ensemble (VADER+TextBlob)",
+    "accuracy": 0.7988918617144543,
+    "f1_weighted": 0.7728901303534316,
+    "f1_macro": 0.5163248541533799,
+    "n_samples": 47467
+  },
+  "logistic_regression": {
+    "model_name": "Logistic Regression",
+    "accuracy": 0.8293659153149358,
+    "f1_weighted": 0.8433085355821294,
+    "f1_macro": 0.6790141851957295,
+    "n_samples": null
+  },
+  "naive_bayes": {
+    "model_name": "Naive Bayes",
+    "accuracy": 0.8541183905624605,
+    "f1_weighted": 0.8292503131360287,
+    "f1_macro": 0.6166290698707858,
+    "n_samples": null
+  },
+  "cnn_pytorch": {
+    "model_name": "cnn_pytorch",
+    "accuracy": 0.8524331156519908,
+    "f1_weighted": 0.8464495300056591,
+    "f1_macro": 0.660881074925379,
+    "n_samples": 9494
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "model_name": "CNN (TensorFlow)",
+  "framework": "tensorflow",
+  "accuracy": 0.8551716873815041,
+  "test_loss": 0.0,
+  "precision_weighted": 0.8320748970738999,
+  "recall_weighted": 0.8551716873815041,
+  "f1_weighted": 0.8381484708157609,
+  "precision_macro": 0.6958154262643782,
+  "recall_macro": 0.6158561081141681,
+  "f1_macro": 0.6385598710372207,
+  "n_samples": 9494,
+  "confusion_matrix": [
+    [
+      1016,
+      91,
+      387
+    ],
+    [
+      227,
+      165,
+      428
+    ],
+    [
+      136,
+      106,
+      6938
+    ]
+  ],
+  "label_mapping": {
+    "0": "negative",
+    "1": "neutral",
+    "2": "positive"
+  },
+  "timestamp": "2026-03-17T00:23:44.474443",
+  "note": "Regenerated from existing trained model"
+}

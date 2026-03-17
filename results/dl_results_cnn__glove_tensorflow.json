@@ -1,0 +1,37 @@
+{
+  "model_name": "CNN + GloVe (TensorFlow)",
+  "framework": "tensorflow",
+  "accuracy": 0.8541183905624605,
+  "test_loss": 0.0,
+  "precision_weighted": 0.8270164516873377,
+  "recall_weighted": 0.8541183905624605,
+  "f1_weighted": 0.8228414485710842,
+  "precision_macro": 0.6840445127611193,
+  "recall_macro": 0.5920679039883217,
+  "f1_macro": 0.5736081154563557,
+  "n_samples": 9494,
+  "confusion_matrix": [
+    [
+      1153,
+      18,
+      323
+    ],
+    [
+      334,
+      33,
+      453
+    ],
+    [
+      240,
+      17,
+      6923
+    ]
+  ],
+  "label_mapping": {
+    "0": "negative",
+    "1": "neutral",
+    "2": "positive"
+  },
+  "timestamp": "2026-03-17T00:23:46.429936",
+  "note": "Regenerated from existing trained model"
+}
