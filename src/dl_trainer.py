@@ -7,11 +7,16 @@ Handles data preparation, training loops, validation, and model persistence.
 
 import os
 import logging
+import json
 from pathlib import Path
 from typing import Tuple, Dict, Optional, Union
 import numpy as np
 import pandas as pd
 from datetime import datetime
+from sklearn.metrics import (
+    accuracy_score, precision_recall_fscore_support,
+    confusion_matrix, classification_report
+)
 
 # TensorFlow imports (optional)
 try:
@@ -162,6 +167,113 @@ def prepare_data_for_dl(
 
 
 # ============================================================================
+# METRICS CALCULATION AND SAVING
+# ============================================================================
+
+def calculate_and_save_metrics(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    model_name: str,
+    framework: str,
+    test_loss: float,
+    n_samples: int,
+    label_mapping: Optional[Dict] = None,
+    save_dir: str = 'results'
+) -> Dict:
+    """
+    Calculate full evaluation metrics and save to JSON file.
+
+    Args:
+        y_true: True labels
+        y_pred: Predicted labels (class indices)
+        model_name: Name of the model
+        framework: Framework used ('tensorflow' or 'pytorch')
+        test_loss: Test loss value
+        n_samples: Number of test samples
+        label_mapping: Optional mapping of indices to label names
+        save_dir: Directory to save results
+
+    Returns:
+        Dictionary containing all metrics
+    """
+    # Create results directory if it doesn't exist
+    results_path = Path(save_dir)
+    results_path.mkdir(parents=True, exist_ok=True)
+
+    # Calculate metrics
+    accuracy = accuracy_score(y_true, y_pred)
+
+    # Calculate precision, recall, f1 for each class
+    precision, recall, f1, support = precision_recall_fscore_support(
+        y_true, y_pred, average=None, zero_division=0
+    )
+
+    # Calculate weighted and macro averages
+    precision_weighted, recall_weighted, f1_weighted, _ = precision_recall_fscore_support(
+        y_true, y_pred, average='weighted', zero_division=0
+    )
+
+    precision_macro, recall_macro, f1_macro, _ = precision_recall_fscore_support(
+        y_true, y_pred, average='macro', zero_division=0
+    )
+
+    # Generate confusion matrix
+    cm = confusion_matrix(y_true, y_pred)
+
+    # Generate classification report
+    target_names = None
+    if label_mapping:
+        target_names = [label_mapping[i] for i in range(len(label_mapping))]
+
+    report = classification_report(
+        y_true, y_pred,
+        target_names=target_names,
+        output_dict=True,
+        zero_division=0
+    )
+
+    # Compile results
+    results = {
+        "model_name": model_name,
+        "framework": framework,
+        "accuracy": float(accuracy),
+        "test_loss": float(test_loss),
+        "precision_weighted": float(precision_weighted),
+        "recall_weighted": float(recall_weighted),
+        "f1_weighted": float(f1_weighted),
+        "precision_macro": float(precision_macro),
+        "recall_macro": float(recall_macro),
+        "f1_macro": float(f1_macro),
+        "n_samples": int(n_samples),
+        "confusion_matrix": cm.tolist(),
+        "classification_report": report,
+        "per_class_metrics": {
+            "precision": precision.tolist(),
+            "recall": recall.tolist(),
+            "f1": f1.tolist(),
+            "support": support.tolist()
+        },
+        "label_mapping": label_mapping,
+        "timestamp": datetime.now().isoformat()
+    }
+
+    # Save to JSON file
+    # Create safe filename from model name
+    safe_name = model_name.lower().replace(" ", "_").replace("+", "").replace("(", "").replace(")", "")
+    results_file = results_path / f"dl_results_{safe_name}.json"
+
+    with open(results_file, 'w') as f:
+        json.dump(results, f, indent=2)
+
+    logger.info(f"✓ Saved evaluation metrics to {results_file}")
+    logger.info(f"  Accuracy: {accuracy:.4f}")
+    logger.info(f"  F1 (weighted): {f1_weighted:.4f}")
+    logger.info(f"  F1 (macro): {f1_macro:.4f}")
+
+    return results
+
+
+# ============================================================================
 # TENSORFLOW TRAINING
 # ============================================================================
 
@@ -277,6 +389,23 @@ def train_tensorflow_model(
     logger.info(f"Test Loss: {test_loss:.4f}")
     logger.info(f"Test Accuracy: {test_accuracy:.4f}")
 
+    # Get predictions for full metrics calculation
+    logger.info("Calculating full evaluation metrics...")
+    y_pred_probs = model.predict(data_dict['X_test'], verbose=0)
+    y_pred = np.argmax(y_pred_probs, axis=1)
+    y_true = data_dict['y_test']
+
+    # Calculate and save full metrics
+    metrics = calculate_and_save_metrics(
+        y_true=y_true,
+        y_pred=y_pred,
+        model_name=model_name,
+        framework='tensorflow',
+        test_loss=test_loss,
+        n_samples=len(y_true),
+        label_mapping=data_dict.get('label_mapping')
+    )
+
     # Return model and history
     history_dict = {
         'loss': history.history['loss'],
@@ -284,7 +413,8 @@ def train_tensorflow_model(
         'val_loss': history.history['val_loss'],
         'val_accuracy': history.history['val_accuracy'],
         'test_loss': test_loss,
-        'test_accuracy': test_accuracy
+        'test_accuracy': test_accuracy,
+        'metrics': metrics  # Add full metrics to history
     }
 
     return model, history_dict
@@ -500,6 +630,10 @@ def train_pytorch_model(
     test_correct = 0
     test_total = 0
 
+    # Collect all predictions and labels for full metrics
+    all_predictions = []
+    all_labels = []
+
     with torch.no_grad():
         for sequences, labels in test_loader:
             sequences = sequences.to(device)
@@ -513,6 +647,10 @@ def train_pytorch_model(
             test_total += labels.size(0)
             test_correct += (predicted == labels).sum().item()
 
+            # Store predictions and labels
+            all_predictions.extend(predicted.cpu().numpy())
+            all_labels.extend(labels.cpu().numpy())
+
     test_accuracy = test_correct / test_total
     avg_test_loss = test_loss / len(test_loader)
 
@@ -521,6 +659,23 @@ def train_pytorch_model(
 
     logger.info(f"Test Loss: {avg_test_loss:.4f}")
     logger.info(f"Test Accuracy: {test_accuracy:.4f}")
+
+    # Calculate and save full metrics
+    logger.info("Calculating full evaluation metrics...")
+    y_true = np.array(all_labels)
+    y_pred = np.array(all_predictions)
+
+    metrics = calculate_and_save_metrics(
+        y_true=y_true,
+        y_pred=y_pred,
+        model_name=model_name,
+        framework='pytorch',
+        test_loss=avg_test_loss,
+        n_samples=len(y_true),
+        label_mapping=data_dict.get('label_mapping')
+    )
+
+    history['metrics'] = metrics  # Add full metrics to history
 
     return model, history
 

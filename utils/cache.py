@@ -120,7 +120,7 @@ def load_data():
 
 @st.cache_data
 def load_evaluation_results():
-    """Load model evaluation results."""
+    """Load model evaluation results including deep learning models."""
     summary_path = RESULTS_DIR / "evaluation_summary.json"
     comparison_path = RESULTS_DIR / "evaluation_comparison.csv"
 
@@ -132,6 +132,49 @@ def load_evaluation_results():
 
     if comparison_path.exists():
         results["comparison"] = pd.read_csv(comparison_path)
+
+    # Load deep learning model results from JSON files
+    dl_results_files = list(RESULTS_DIR.glob("dl_results_*.json"))
+
+    if dl_results_files:
+        dl_metrics = []
+
+        for dl_file in dl_results_files:
+            try:
+                with open(dl_file, "r") as f:
+                    metrics = json.load(f)
+
+                # Extract relevant metrics for comparison table
+                dl_metrics.append({
+                    "Model": metrics.get("model_name", "Unknown"),
+                    "Accuracy": metrics.get("accuracy", 0.0),
+                    "F1 (weighted)": metrics.get("f1_weighted", 0.0),
+                    "F1 (macro)": metrics.get("f1_macro", 0.0),
+                    "Precision": metrics.get("precision_weighted", 0.0),
+                    "Recall": metrics.get("recall_weighted", 0.0),
+                })
+            except Exception as e:
+                print(f"Warning: Could not load {dl_file}: {e}")
+
+        if dl_metrics:
+            dl_df = pd.DataFrame(dl_metrics)
+
+            # Merge with existing comparison if it exists
+            if "comparison" in results:
+                # Remove any existing DL models from comparison (to avoid duplicates)
+                dl_model_names = dl_df["Model"].tolist()
+                results["comparison"] = results["comparison"][
+                    ~results["comparison"]["Model"].isin(dl_model_names)
+                ]
+
+                # Concatenate the dataframes
+                results["comparison"] = pd.concat(
+                    [results["comparison"], dl_df],
+                    ignore_index=True
+                )
+            else:
+                # If no existing comparison, use DL results as the comparison
+                results["comparison"] = dl_df
 
     return results if results else None
 

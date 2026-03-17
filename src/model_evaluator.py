@@ -147,23 +147,64 @@ def evaluate_dl_model(model, history, framework, model_name="DL Model"):
     Returns:
         Dictionary with evaluation metrics
     """
-    # Extract metrics from training history
-    # Deep learning models have already been evaluated during training
-    # We use those results here
+    import json
+    from pathlib import Path
 
+    # Try to load full metrics from saved JSON file
+    # Create safe filename from model name
+    safe_name = model_name.lower().replace(" ", "_").replace("+", "").replace("(", "").replace(")", "")
+    results_file = Path("results") / f"dl_results_{safe_name}.json"
+
+    if results_file.exists():
+        # Load full metrics from JSON file
+        try:
+            with open(results_file, 'r') as f:
+                metrics = json.load(f)
+
+            return {
+                "model_name": model_name,
+                "accuracy": metrics.get('accuracy', 0.0),
+                "f1_weighted": metrics.get('f1_weighted', 0.0),
+                "f1_macro": metrics.get('f1_macro', 0.0),
+                "precision": metrics.get('precision_weighted', 0.0),
+                "recall": metrics.get('recall_weighted', 0.0),
+                "test_loss": metrics.get('test_loss', 0.0),
+                "framework": framework,
+                "n_samples": metrics.get('n_samples', 0),
+            }
+        except Exception as e:
+            print(f"Warning: Could not load metrics from {results_file}: {e}")
+
+    # Fall back to history-only metrics if JSON file doesn't exist
     test_accuracy = history.get('test_accuracy', 0.0)
     test_loss = history.get('test_loss', 0.0)
 
-    # If we don't have full evaluation metrics, create a simplified result
-    # In practice, you'd want to re-run evaluation with full metrics
+    # Check if metrics are in history dict (from recent training)
+    if 'metrics' in history:
+        metrics = history['metrics']
+        return {
+            "model_name": model_name,
+            "accuracy": metrics.get('accuracy', test_accuracy),
+            "f1_weighted": metrics.get('f1_weighted', 0.0),
+            "f1_macro": metrics.get('f1_macro', 0.0),
+            "precision": metrics.get('precision_weighted', 0.0),
+            "recall": metrics.get('recall_weighted', 0.0),
+            "test_loss": test_loss,
+            "framework": framework,
+            "n_samples": metrics.get('n_samples', 0),
+        }
+
+    # Fallback: only basic metrics available
     return {
         "model_name": model_name,
         "accuracy": test_accuracy,
+        "f1_weighted": 0.0,
+        "f1_macro": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
         "test_loss": test_loss,
         "framework": framework,
-        "n_samples": "N/A",  # Would need to recalculate from test set
-        # Note: For full metrics, we'd need to re-run predictions on test set
-        # This is a simplified version for integration purposes
+        "n_samples": "N/A",
     }
 
 
