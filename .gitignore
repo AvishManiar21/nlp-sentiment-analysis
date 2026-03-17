@@ -55,6 +55,7 @@ outputs/
 # Results - commit JSON files but exclude temporary CSVs
 results/*.csv
 !results/evaluation_comparison.csv
+!results/evaluation_confusion_matrix_*.csv
 
 # HuggingFace cache
 .cache/
