@@ -1,0 +1,30 @@
+name: Code Review Graph - AI PR Analysis
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  ai-code-review:
+    runs-on: ubuntu-latest
+    name: AI-Powered Code Review with Risk Scoring
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better analysis
+
+      - name: Run Code Review Graph Analysis
+        uses: tirth8205/code-review-graph@v2.3.6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Optional: Uncomment to fail PR if high-risk changes detected
+          # fail-on-risk: 'high'
+
+          # Risk threshold options: 'low', 'medium', 'high', 'critical'
+          # Default: Posts comment but doesn't block
