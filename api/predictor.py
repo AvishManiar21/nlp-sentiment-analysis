@@ -2,7 +2,7 @@
 
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Optional, TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -21,15 +21,9 @@ from src.ml_models import (
 )
 from src.sentiment_analyzer import sanitize_text, ensure_nltk_data
 
-# Deep learning imports (optional)
-try:
-    from src.model_factory import ModelFactory, ModelType
+if TYPE_CHECKING:
+    from src.model_factory import ModelFactory
     from src.embedding_manager import EmbeddingManager
-    DL_AVAILABLE = True
-except ImportError:
-    DL_AVAILABLE = False
-    ModelFactory = None
-    ModelType = None
 
 
 class SentimentPredictor:
@@ -39,10 +33,22 @@ class SentimentPredictor:
         self._vader_analyzer: Optional[SentimentIntensityAnalyzer] = None
         self._ml_models: dict = {}
         self._dl_models: dict = {}
-        self._model_factory: Optional[ModelFactory] = None
-        self._embedding_manager: Optional[EmbeddingManager] = None
+        self._model_factory: Optional[Any] = None
+        self._embedding_manager: Optional[Any] = None
         self._models_loaded = False
-        self._dl_enabled = DL_AVAILABLE
+        self._dl_enabled = self._has_saved_dl_models()
+
+    @staticmethod
+    def _has_saved_dl_models() -> bool:
+        """Return True when trained deep-learning model files exist on disk."""
+        dl_dir = MODELS_DIR / "dl"
+        if not dl_dir.exists():
+            return False
+
+        for pattern in ("*.pt", "*.pth", "*.keras"):
+            if any(dl_dir.glob(pattern)):
+                return True
+        return False
     
     def load_models(self) -> bool:
         """Load all available models at startup."""
@@ -61,6 +67,7 @@ class SentimentPredictor:
         # Load deep learning models if available
         if self._dl_enabled:
             try:
+                from src.model_factory import ModelFactory
                 self._model_factory = ModelFactory()
 
                 # Try to load available DL models
@@ -89,6 +96,7 @@ class SentimentPredictor:
 
             except Exception as e:
                 print(f"Warning: Could not load deep learning models: {e}")
+                self._dl_enabled = False
 
         self._models_loaded = True
         return True
