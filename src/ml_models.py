@@ -104,26 +104,27 @@ def get_model_config():
     }
 
 
-def prepare_data(df, text_column="processed_text", label_column="ground_truth", 
+def prepare_data(df, text_column="processed_text", label_column="ground_truth",
                  test_size=0.2, random_state=42):
     """
     Prepare data for training with train/test split.
-    
+
     Args:
         df: DataFrame with text and labels
         text_column: Column containing preprocessed text
         label_column: Column containing labels
         test_size: Fraction of data for testing
         random_state: Random seed for reproducibility
-    
+
     Returns:
         X_train, X_test, y_train, y_test
     """
     df = df.dropna(subset=[text_column, label_column])
-    
-    X = df[text_column].values
-    y = df[label_column].values
-    
+
+    # Use to_numpy() for compatibility with PyArrow-backed pandas arrays
+    X = df[text_column].to_numpy()
+    y = df[label_column].to_numpy()
+
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=test_size, random_state=random_state, stratify=y
     )
