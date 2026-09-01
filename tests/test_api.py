@@ -1,10 +1,17 @@
 """Tests for the FastAPI sentiment analysis API."""
 
+import sys
+
 import pytest
 from fastapi.testclient import TestClient
 
 from api.main import app
 from api.predictor import predictor
+
+
+def test_predictor_import_does_not_eager_load_model_factory():
+    """Predictor import should not eagerly import heavy DL stack."""
+    assert "src.model_factory" not in sys.modules
 
 
 @pytest.fixture(scope="module")
